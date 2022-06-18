@@ -1,0 +1,425 @@
+
+imagePullSecrets: []
+
+# Docker image settings
+images:
+
+  api:
+    repository: fortifydocker/scancentral-dast-api
+    tag: "22.1"
+    pullPolicy: "IfNotPresent"
+  globalservice:
+    repository: fortifydocker/scancentral-dast-globalservice
+    tag: "22.1"
+    pullPolicy: "IfNotPresent"
+  sensor:
+    repository: fortifydocker/webinspect
+    tag: "22.1"
+    pullPolicy: "IfNotPresent"
+  utilityservice:
+    repository: fortifydocker/webinspect
+    tag: "22.1"
+    pullPolicy: "IfNotPresent"
+  twofactorauth:
+    repository: fortifydocker/fortify-2fa
+    tag: "22.1.alpine.3.14.6"
+    pullPolicy: "IfNotPresent"
+  wise:
+    repository: fortifydocker/wise
+    tag: "22.1.ubuntu.2004"
+    pullPolicy: "IfNotPresent"
+  upgradeJob:
+    # This image must include the Securebase if DAST needs to be initialized/upgraded.
+    # The image without SecureBase can only be used for ScanCentral DAST configuration.
+    repository: fortifydocker/scancentral-dast-config
+    tag: "22.1"
+    pullPolicy: "IfNotPresent"
+  upgradePreparationJob:
+    repository: bitnami/kubectl
+    tag: "latest"
+    pullPolicy: "IfNotPresent"
+
+
+# If not provided Helm will create a DAST Secret based on this values file. Refer to secret/secret.yaml template
+# to learn about expected secret fields
+secretName: ""
+
+# On autodeploy mode DAST will create/migrate/update the backend database
+# accordingly on every helm upgrade
+autoDeploy: true
+
+# Log level
+logLevel: Information
+
+# DAST configuration.
+configuration:
+  # Refer to the Fortify ScanCentral DAST Configuration and Usage Guide for more details.
+  # Environment variable placeholders may be used in the format ${ENVIRONMENT VARIABLE NAME}. Any environment variable placeholder will be replaced during runtime.
+  databaseSettings:
+    # databaseProvider indicates the type of database that will be used.
+    # Allowed values: SQLServer, PostgreSQL, AzureSQLServer, AzurePostgreSQL, AmazonRdsSQLServer, AmazonRdsPostgreSQL
+    databaseProvider: SQLServer
+    server: MyServer
+    database: DAST
+    # dboLevelDatabaseAccount is not required if the database already exists and migration scripts have already been applied.
+    # A migration script can be created using the 'generateMigrationScript' command.
+    dboLevelDatabaseAccount:
+      username: username
+      # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
+      password: password
+      # Allowed values: true, false
+      useWindowsAuthentication: false
+      additionalConnectionProperties:
+    standardDatabaseAccount:
+      username: username
+      # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
+      password: password
+      # Allowed values: true, false
+      createLogin: false
+      additionalConnectionProperties:
+  # Allowed values: true, false
+  retainCompletedScans: false
+  # Allowed values: true, false
+  disableAdvancedScanPrioritization: false
+  # Allowed values: true, false
+  enableRestrictedScanSettings: false
+  # An encrypted serviceToken is recommended. The password can be encrypted using the 'encrypt' command.
+  serviceToken: minimum_10_characters
+  smartUpdateSettings:
+    smartUpdateUrl: https://smartupdate.fortify.microfocus.com/
+    licensingUrl: https://licenseservice.fortify.microfocus.com/
+  sSCSettings:
+    sSCRootUrl: http://ssc
+    serviceAccountUserName: username
+    serviceAccountPassword: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
+  dASTApiSettings:
+    rootUrl: http://${RELEASE_NAME}-api
+    disableCorsOrigins: false # Allowed values: true, false
+    # One ore more corsOrigins entries is required if disableCorsOrigins = false
+    # Each entry should be on a separate line and start with a dash (-) followed by a space
+    corsOrigins:
+      - http://ssc
+      - http://${RELEASE_NAME}-api
+  lIMSettings:
+    limUrl: https://lim-server-instance/HP.AppSec.Lim.Services/
+    serviceAccountUserName: username
+    serviceAccountPassword: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
+    defaultLimPoolName: username
+    defaultLimPoolPassword: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
+    useLimRestApi: false # Allowed values: true, false
+  utilityWorkerServiceSettings:
+    rootUrl: http://${RELEASE_NAME}-utilityservice
+  dastApiSSLSettings:
+    sSLPreferenceType: NoSSL # Allowed values: GenerateCertificate, UseExistingCertificate, NoSSL
+    # generateCertificateModel is required if sSLPreferenceType =  GenerateCertificate
+    generateCertificateModel:
+      certificateDirectory: c:\directory_where_certificate_is_saved
+      host: dast-api
+      password: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
+      validity: 1000
+      location: Alpharetta
+      email: email@domain.com
+    # existingCertificateModel is required if sSLPreferenceType =  UseExistingCertificate
+    existingCertificateModel:
+      certificateFullPath: c:\path_to_cert\dast_api.cert
+      password: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
+  utilityWorkerServiceSSLSettings:
+    sSLPreferenceType: NoSSL # Allowed values: GenerateCertificate, UseExistingCertificate, NoSSL
+    # generateCertificateModel is required if sSLPreferenceType =  GenerateCertificate
+    generateCertificateModel:
+      certificateDirectory: c:\directory_where_certificate_is_saved
+      host: dast-utility-service
+      password: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
+      validity: 1000
+      location: Alpharetta
+      email: email@domain.com
+    # existingCertificateModel is required if sSLPreferenceType =  UseExistingCertificate
+    existingCertificateModel:
+      certificateFullPath: c:\path_to_cert\dast_utility_service.cert
+      password: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
+  environmentSettings:
+    allowNonTrustedServerCertificate: true # Allowed values: true, false
+    proxySettings:
+      useProxy: false # Allowed values: true, false
+      proxyAddress: http://proxy-instance.com:8080
+      proxyPassword: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
+      proxyUserName: username
+      proxyBypassList: dast-api,dast-utility-service,lim-server-instance,ssc-instance
+  applySecureBase: true # Allowed values: true, false
+  # secureBasePath is required if applySecureBase =  true
+  secureBasePath: c:\app\DefaultData.zip
+
+# Ingress settings
+ingress:
+
+  api:
+    enabled: false
+    annotations:
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+
+      # NGINX restricts uploads to 1M by default, you must use the following annotation
+      # to increase the max upload size
+      # nginx.ingress.kubernetes.io/proxy-body-size: 16m
+    hosts:
+      - host: dast-api.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+    #  - secretName: tls-secret
+    #    hosts:
+    #      - scdast-api.local
+
+  twofactorauth:
+    enabled: false
+    className: ""
+    annotations:
+      # kubernetes.io/ingress.class: nginx
+
+      # twofactor auth uses https in the backend
+      # nginx.ingress.kubernetes.io/backend-protocol: https
+
+      # twofactorauth uses WebSockets. If using nginx, these annotations are necessary
+      # in order to keep the WebSockets open enough time to be functional
+      # https://kubernetes.github.io/ingress-nginx/user-guide/miscellaneous/#websockets
+      # nginx.ingress.kubernetes.io/proxy-read-timeout: 3600
+      # nginx.ingress.kubernetes.io/proxy-send-timeout: 3600
+    hosts:
+      - host: dast-2fa.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+
+# Kubernetes configuration for specific components
+# Current values should work, only authentication tokens must be changed.
+
+api:
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  additionalEnvironment: []
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources: {}
+
+  nodeSelector:
+    kubernetes.io/os: windows
+
+  tolerations:
+    # In case Windows nodes are tainted with windows:NoSchedule
+    - key: "os"
+      operator: "Equal"
+      value: "windows"
+      effect: "NoSchedule"
+
+  affinity: {}
+
+globalservice:
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  additionalEnvironment: []
+
+  resources: {}
+
+  nodeSelector:
+    kubernetes.io/os: windows
+
+  tolerations:
+    # In case Windows nodes are tainted with windows:NoSchedule
+    - key: "os"
+      operator: "Equal"
+      value: "windows"
+      effect: "NoSchedule"
+
+  affinity: {}
+
+utilityservice:
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  additionalEnvironment: []
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources: {}
+
+  nodeSelector:
+    kubernetes.io/os: windows
+
+  tolerations:
+    # In case Windows nodes are tainted with windows:NoSchedule
+    - key: "os"
+      operator: "Equal"
+      value: "windows"
+      effect: "NoSchedule"
+
+  affinity: {}
+
+sensor:
+
+  replicas: 1
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  additionalEnvironment: []
+
+  resources:
+    requests:
+      memory: 16G
+      cpu: 4
+
+  nodeSelector:
+    kubernetes.io/os: windows
+
+  tolerations:
+    # In case Windows nodes are tainted with windows:NoSchedule
+    - key: "os"
+      operator: "Equal"
+      value: "windows"
+      effect: "NoSchedule"
+
+  affinity: {}
+
+# WISE requires haproxy-ingress and metrics server at the cluster. See:
+# - https://artifacthub.io/packages/helm/haproxy-ingress/haproxy-ingress/
+# - https://github.com/kubernetes-sigs/metrics-server
+wise:
+
+  # Enable WebInspect Script Engine
+  enabled: false
+
+  authenticationToken: "CHANGEMEAuthenticationTokenMinimum36Characters"
+
+  # If not on Azure, ingressHost needs to resolve to haproxy pod's IP (pod IP, not service IP).
+  # This is a limitation observed in clusters that combine Windows and Linux nodes. Kubernetes fails to
+  # set the Source IP for packets coming from Windows pods and sent to Kubernetes services. Using the pod IP
+  # instead of the service IP fixes the issue.
+  # Tip: Use nip.io subdomains. For example, after "kubectl get pod -o wide" you find that haproxy's IP is
+  # 10.240.0.224 . If you set ingressHost to wise.dast.10-240-0-224.nip.io, it will resolve to the right IP.
+  # At DAST Web UI you'll set the Scan Scaling host to ws://wise.dast.10-240-0-224.nip.io
+  ingressHost: ""
+
+  replicas:
+    autoscale: true
+    min: 2
+    max: 10
+    cpu:
+      # WISE pods will request X cores and will scale when they reach 80% of the CPU capacity
+      cores: 4
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  additionalEnvironment: []
+
+  service:
+    type: ClusterIP
+    httpPort: 9442
+    httpsPort: 9443
+
+  resources:
+    requests:
+      cpu:
+        cores: 4
+
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  tolerations: []
+
+  affinity: {}
+
+twofactorauth:
+
+  masterToken: "CHANGEMEMasterTokenMinimum36Characters"
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  additionalEnvironment: []
+
+  service:
+    type: ClusterIP
+    port: 443
+
+  resources: {}
+
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  tolerations: []
+
+  affinity: {}
+
+upgradePreparationJob:
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  additionalEnvironment: []
+
+  resources: {}
+
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  tolerations: []
+
+  affinity: {}
+
+upgradeJob:
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  additionalEnvironment: []
+
+  resources: {}
+
+  nodeSelector:
+    kubernetes.io/os: windows
+
+  affinity: {}
+
+  tolerations:
+    # In case Windows nodes are tainted with windows:NoSchedule
+    - key: "os"
+      operator: "Equal"
+      value: "windows"
+      effect: "NoSchedule"
