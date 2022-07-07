@@ -77,6 +77,8 @@ spec:
               path: /{{ .Values.adminWebSiteName }}
               port: http
           readinessProbe:
+            initialDelaySeconds: 10
+            failureThreshold: 6
             httpGet:
               path: /{{ .Values.adminWebSiteName }}
               port: http

@@ -38,6 +38,10 @@ spec:
           env:
             - name: RELEASE_NAME
               value: {{ .Release.Name }}
+            - name: SCANCENTRAL_DAST_API_SERVICE
+              value: {{ include "dast-api.fullname" . }}
+            - name: SCANCENTRAL_DAST_UTILITYSERVICE_SERVICE
+              value: {{ include "dast-utilityservice.fullname" . }}
             {{- with .Values.upgradeJob.additionalEnvironment }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

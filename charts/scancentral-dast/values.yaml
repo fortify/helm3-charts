@@ -55,6 +55,9 @@ logLevel: Information
 configuration:
   # Refer to the Fortify ScanCentral DAST Configuration and Usage Guide for more details.
   # Environment variable placeholders may be used in the format ${ENVIRONMENT VARIABLE NAME}. Any environment variable placeholder will be replaced during runtime.
+  # The upgrade job has the following environment variables pre-configured that can be used in the configuration:
+  #   - SCANCENTRAL_DAST_API_SERVICE: Points to API's Kubernetes service
+  #   - SCANCENTRAL_DAST_UTILITYSERVICE_SERVICE: Points to Utility Service's Kubernetes service
   databaseSettings:
     # databaseProvider indicates the type of database that will be used.
     # Allowed values: SQLServer, PostgreSQL, AzureSQLServer, AzurePostgreSQL, AmazonRdsSQLServer, AmazonRdsPostgreSQL
@@ -93,13 +96,13 @@ configuration:
     serviceAccountUserName: username
     serviceAccountPassword: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
   dASTApiSettings:
-    rootUrl: http://${RELEASE_NAME}-api
+    rootUrl: http://${SCANCENTRAL_DAST_API_SERVICE}
     disableCorsOrigins: false # Allowed values: true, false
     # One ore more corsOrigins entries is required if disableCorsOrigins = false
     # Each entry should be on a separate line and start with a dash (-) followed by a space
     corsOrigins:
       - http://ssc
-      - http://${RELEASE_NAME}-api
+      - http://${SCANCENTRAL_DAST_API_SERVICE}
   lIMSettings:
     limUrl: https://lim-server-instance/HP.AppSec.Lim.Services/
     serviceAccountUserName: username
@@ -108,7 +111,7 @@ configuration:
     defaultLimPoolPassword: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
     useLimRestApi: false # Allowed values: true, false
   utilityWorkerServiceSettings:
-    rootUrl: http://${RELEASE_NAME}-utilityservice
+    rootUrl: http://${SCANCENTRAL_DAST_UTILITYSERVICE_SERVICE}
   dastApiSSLSettings:
     sSLPreferenceType: NoSSL # Allowed values: GenerateCertificate, UseExistingCertificate, NoSSL
     # generateCertificateModel is required if sSLPreferenceType =  GenerateCertificate

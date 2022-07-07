@@ -62,7 +62,7 @@ spec:
             - name: RCServerAuthType
               value: "none"
             - name: DASTApiRootUrl
-              value: "http://{{ .Release.Name }}-api"
+              value: "http://{{ include "dast-api.fullname" . }}"
             - name: AllowNonTrustedServerCertificate
               value: {{ .Values.configuration.environmentSettings.allowNonTrustedServerCertificate | quote }}
             - name: ServiceToken
