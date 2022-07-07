@@ -1,0 +1,106 @@
+# If empty, a secret will be created automatically using sensitive properties
+# If not empty, the existing secret referenced by "secretName" will be used to provide the sensitive properties
+secretName: ""
+
+adminWebSiteName: "LIM.Admin"
+serviceWebSiteName: "LIM.Service"
+apiSiteName: "LIM.API"
+adminUsername: "admin"
+adminPassword: ""
+adminEmail: "test@example.com"
+adminFriendlyName: "admin"
+
+imagePullSecrets: []
+
+image:
+  repository: fortifydocker/lim
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "22.1"
+
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+# runAsUser: 1000
+
+
+# Additional environment variables. Format:
+#  - name: varName
+#    value: varValue
+additionalEnvironment: []
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: lim.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+persistence:
+  enabled: false
+  ## A manually managed Persistent Volume and Claim
+  ## Requires persistence.enabled: true
+  ## If defined, PVC must be created manually before volume will be bound
+  existingClaim:
+  ## LIM data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack).
+  storageClass: ""
+  annotations: {}
+  labels: {}
+  accessMode: "ReadWriteOnce"
+  size: "100Mi"
+
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+
+nodeSelector:
+  kubernetes.io/os: windows
+
+tolerations:
+  # In case Windows nodes are tainted with windows:NoShedule
+  - key: "os"
+    operator: "Equal"
+    value: "windows"
+    effect: "NoSchedule"
+
+affinity: {}
+
