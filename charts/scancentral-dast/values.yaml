@@ -280,6 +280,12 @@ utilityservice:
 
 sensor:
 
+  # Pod names are usually a combination of the release and the chart name. They can become
+  # very long and 22.1.0 UI cannot display them correctly. Use this nameOverride for a shorter
+  # sensor name. Be careful if there are multiple scancentral-dast releases in the same namespace with the same
+  # nameOverride as pod names can conflict.
+  nameOverride: sensor
+
   replicas: 1
 
   podAnnotations: {}
@@ -290,10 +296,7 @@ sensor:
 
   additionalEnvironment: []
 
-  resources:
-    requests:
-      memory: 16G
-      cpu: 4
+  resources: {}
 
   nodeSelector:
     kubernetes.io/os: windows

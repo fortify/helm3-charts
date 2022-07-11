@@ -30,7 +30,7 @@ If release name contains chart name it will be used as a full name.
 {{- printf "%s-globalservice" (include "dast.fullname" .) }}
 {{- end }}
 {{- define "dast-sensor.fullname" -}}
-{{- printf "%s-sensor" (include "dast.fullname" .) }}
+{{- .Values.sensor.nameOverride | default (printf "%s-sensor" (include "dast.fullname" .)) }}
 {{- end }}
 {{- define "dast-twofactorauth.fullname" -}}
 {{- printf "%s-twofactorauth" (include "dast.fullname" .) }}

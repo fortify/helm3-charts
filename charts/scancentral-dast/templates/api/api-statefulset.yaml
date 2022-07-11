@@ -68,7 +68,7 @@ spec:
               port: http
               scheme: HTTP
           readinessProbe:
-            initialDelaySeconds: 10
+            initialDelaySeconds: 20
             failureThreshold: 6
             httpGet:
               path: /

@@ -22,6 +22,9 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      # LIM uses SQL Express which runs as NT SERVICE\MSSQL$SQLEXPRESS .
+      # That user cannot write on a mounted volume. This initContainer grants permissions
+      # to that user.
       initContainers:
         - name: fix-lim-dir-ownership
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
