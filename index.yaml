@@ -3,6 +3,16 @@ entries:
   lim:
   - apiVersion: v2
     appVersion: 22.1.0
+    created: "2022-10-24T12:13:12.609471081Z"
+    description: A Helm chart for Kubernetes
+    digest: 78797acdc1f27c37ca5f5d7e902eba03e4298617b6b62e72c9695f755f69f748
+    name: lim
+    type: application
+    urls:
+    - https://github.com/fortify/helm3-charts/releases/download/lim-22.1.1/lim-22.1.1.tgz
+    version: 22.1.1
+  - apiVersion: v2
+    appVersion: 22.1.0
     created: "2022-07-11T08:24:27.167753673Z"
     description: A Helm chart for Kubernetes
     digest: 67ca5b3be00a2cff4a8dac2b251da29a7ddcdaac4b6887b3d6c4e3d716c4d6a9
@@ -22,4 +32,4 @@ entries:
     urls:
     - https://github.com/fortify/helm3-charts/releases/download/scancentral-dast-22.1.0/scancentral-dast-22.1.0.tgz
     version: 22.1.0
-generated: "2022-07-11T08:24:27.32708369Z"
+generated: "2022-10-24T12:13:12.609744078Z"
