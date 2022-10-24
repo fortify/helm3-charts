@@ -76,12 +76,12 @@ spec:
               containerPort: 80
               protocol: TCP
           livenessProbe:
+            initialDelaySeconds: 30
+            failureThreshold: 6
             httpGet:
               path: /{{ .Values.adminWebSiteName }}
               port: http
           readinessProbe:
-            initialDelaySeconds: 10
-            failureThreshold: 6
             httpGet:
               path: /{{ .Values.adminWebSiteName }}
               port: http
