@@ -1,0 +1,141 @@
+# Default values for ssc chart.
+# This is a YAML-formatted file.
+
+
+# image is a map of the global Kubernetes image settings
+image:
+
+  # repositoryPrefix is a prefix for SSC images and can be used to pull images from a private registry
+  repositoryPrefix: "fortifydocker/"
+
+  # pullPolicy is Kubernetes image pull policy, supported values are Always, IfNotPresent, and Never
+  pullPolicy: Always
+
+  # buildNumber is an image build number to pull, pull the latest build for release if empty, must be a string
+  buildNumber: ""
+
+  # webapp is a name for SSC webapp image, the name will be prefixed by repositoryPrefix
+  webapp: "ssc-webapp"
+
+
+# imagePullSecrets is a list of Kubernetes image pull secrets, for details, see the Kubernetes documentation
+# (https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/)
+imagePullSecrets: []
+
+# nameOverride is a value to override service name, defaults to the helm chart name (ssc)
+nameOverride: ""
+
+# fullnameOverride is a value to override fully-qualified service, defaults to "{deployment_name}-{service_name}"
+fullnameOverride: ""
+
+
+# service is a map of the Kubernetes service resource options used to expose the SSC service
+service:
+
+  # type is Kubernetes service type (required), supported values" "ClusterIP", "NodePort", "LoadBalancer"
+  type: ClusterIP
+
+  # httpPort is an external HTTP port of the service, the meaning depends on selected service type, disabled if empty
+  httpPort: 80
+
+  # httpsPort is an external HTTPS port of the service (required)
+  httpsPort: 443
+
+  # clusterIP is fixed service cluster IP address, if empty, Kubernetes assigns a value
+  clusterIP: ""
+
+  # loadBalancerIP is fixed load balancer IP address, if empty, the Kubernetes cloud provider assigns a value
+  loadBalancerIP: ""
+
+  # annotations is a map of annotations applied to the service
+  annotations: {}
+
+
+# urlHost is a fully qualified DNS name for externally accessing the application (required)
+urlHost: ""
+
+# urlPort is HTTPS port for externally accessing the application, if zero, a value of service.httpsPort is used instead
+urlPort: 0
+
+# sscPathPrefix is URL path prefix where the SSC application will be accessible
+sscPathPrefix: "/"
+
+# httpClientCertificateVerification is configuring HTTPS client certificate verification, supported values: "none", "optional", "required"
+httpClientCertificateVerification: "none"
+
+
+# secretRef is a reference to externally managed Kubernetes secret (required)
+secretRef:
+
+  # name is a name of externally managed Kubernetes secret to be used for configuration (required)
+  name: ""
+
+  # keys is a map of key names for externally managed Kubernetes secret (required)
+  keys:
+
+    # sscLicenseEntry is a key name for a Fortify licence (required)
+    sscLicenseEntry: ""
+
+    # sscAutoconfigEntry is a key name for an SSC autoconfig file (required)
+    sscAutoconfigEntry: ""
+
+    # sscSecretKeyEntry is key name for an SSC secret.key file
+    sscSecretKeyEntry: ""
+
+    # httpCertificateKeystoreFileEntry is a key name for a keystore with certificate and private key for HTTPS (required)
+    httpCertificateKeystoreFileEntry: ""
+
+    # httpCertificateKeystorePasswordEntry is a key name for a password of the HTTPS keystore (required)
+    httpCertificateKeystorePasswordEntry: ""
+
+    # httpCertificateKeystorePasswordEntry is a key name for a password of the HTTPS private key (required)
+    httpCertificateKeyPasswordEntry: ""
+
+    # httpTruststoreFileEntry is a key name for a truststore used by client certificate verification
+    httpTruststoreFileEntry: ""
+
+    # httpTruststoreFileEntry is a key name for a password of the client certificate verification truststore
+    httpTruststorePasswordEntry: ""
+
+    # jvmTruststoreFileEntry is a key name for a JVM truststore
+    jvmTruststoreFileEntry: ""
+
+    # jmvTruststorePasswordEntry is a key name for a password of the JVM truststore
+    jmvTruststorePasswordEntry: ""
+
+
+# persistentVolumeClaim is a set of SSC's persistent volume claim options
+persistentVolumeClaim:
+
+  # size is a requested size of the persistent volume (required)
+  size: "4Gi"
+
+  # storageClassName is a storage class name to be used for the persistent volume
+  storageClassName: ""
+
+  # selector is a Kubernetes PersistentVolumeClaim selector
+  selector: {}
+
+
+# environment is a list of additional environment variables for the Pod, uses Kubernetes Pod spec syntax
+environment: []
+
+# jvmMaxRAMPercentage is a percentage of memory limit to be used for JVM heap
+jvmMaxRAMPercentage: 86
+
+# jvmExtraOptions is a set of additional options passed to Java process
+jvmExtraOptions: ""
+
+# resources is Kubernetes Pod resources specification
+resources:
+  limits:
+    cpu: 8
+    memory: 28Gi
+  requests:
+    cpu: 1
+    memory: 7Gi
+
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
