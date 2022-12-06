@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "dast-scanner.fullname" . }}
+  labels:
+    component: scanner
+    # This component will be stopped before the upgrade job runs
+    stopBeforeUpgrade: "1"
+    {{- include "dast.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.scanner.replicas }}
+  serviceName: {{ include "dast-scanner.fullname" . }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      component: scanner
+      {{- include "dast.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # This annotation makes sure that the pod is restarted on any upgrade
+        rollme: {{ randAlphaNum 5 | quote }}
+        {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.scanner.podAnnotations }}
+        {{- toYaml .Values.scanner.podAnnotations | nindent 8 }}
+        {{- end }}
+      labels:
+        component: scanner
+        # This component will be stopped before the upgrade job runs
+        stopBeforeUpgrade: "1"
+        {{- include "dast.selectorLabels" . | nindent 8 }}
+        {{- with .Values.scanner.extraPodLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scanner.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.scanner.podSecurityContext | nindent 8 }}
+      containers:
+        - name: datastore
+          image: "{{ .Values.images.scannerDatastore.repository }}:{{ .Values.images.scannerDatastore.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.scannerDatastore.pullPolicy }}
+          volumeMounts:
+            - name: scandata
+              mountPath: /etc/wi/.widata/user/ScanData
+          env:
+            - name: MSSQL_IP_ADDRESS
+              value: 127.0.0.1
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_PID
+              value: "Express"
+            - name: SA_PASSWORD
+              # Hardcoded password as it is a local datastore
+              value: Str0ngP@ssw0rd?
+        - name: wise
+          image: "{{ .Values.images.wise.repository }}:{{ .Values.images.wise.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.wise.pullPolicy }}
+        - name: scanner
+          securityContext:
+            {{- toYaml .Values.scanner.securityContext | nindent 12 }}
+          image: "{{ .Values.images.scanner.repository }}:{{ .Values.images.scanner.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.scanner.pullPolicy }}
+          env:
+            - name: WI_MODE
+              value: "3"
+            - name: WI_API_HOST
+              value: "127.0.0.1"
+            - name: WI_API_PORT
+              value: "8089"
+            - name: WI_WISE
+              value: "ws://127.0.0.1:9442"
+            - name: WI_SQLEXPRESS
+              # Hardcoded password as it is a local datastore
+              value: "Data Source=127.0.0.1;User Id=sa;Password=Str0ngP@ssw0rd?;"
+            - name: WI_API_TLS_ENABLED
+              value: "false"
+            - name: WI_API_AUTH
+              value: "None"
+            - name: DASTApiRootUrl
+              value: "http://{{ include "dast-api.fullname" . }}"
+            - name: AllowNonTrustedServerCertificate
+              value: {{ .Values.configuration.environmentSettings.allowNonTrustedServerCertificate | quote }}
+            - name: ServiceToken
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "secret.name" . }}
+                  key: service-token
+            - name: ScannerPoolId
+              value: "0"
+
+            - name: ScannerDescription
+              value: "{{ .Values.scanner.scannerDescription }}"
+            - name: ScannerType
+              value: "Fixed"
+            {{- with .Values.scanner.additionalEnvironment }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: scandata
+              mountPath: /etc/wi/.widata/user/ScanData
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.scanner.resources | nindent 12 }}
+      volumes:
+        - name: scandata
+          emptyDir: {}
+      nodeSelector:
+      {{- with .Values.scanner.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.scanner.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+      {{- with .Values.scanner.tolerations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+

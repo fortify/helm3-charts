@@ -1,0 +1,68 @@
+{{- if .Values.autoDeploy }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "{{ .Release.Name }}-upgrade-prep-job"
+  labels:
+    component: upgrade-prep-job
+    {{- include "dast.labels" . | nindent 4 }}
+  annotations:
+    # This is what defines this resource as a hook. Without this line, the
+    # job is considered part of the release.
+    "helm.sh/hook": pre-upgrade,pre-install
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "{{ .Release.Name }}-upgrade-prep-job"
+      labels:
+        component: upgrade-prep-job
+        {{- include "dast.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccount: "{{ .Release.Name }}-upgrade-prep-job-sa"
+      containers:
+      - name: upgrade-prep-job
+        image: "{{ .Values.images.upgradePreparationJob.repository }}:{{ .Values.images.upgradePreparationJob.tag | default "latest" }}"
+        imagePullPolicy: {{ .Values.images.upgradePreparationJob.pullPolicy }}
+        command:
+          - sh
+          - "-c"
+          - |
+            # Exit on any error
+            set -e
+            
+            echo "Upgrade preparation starting..."             
+            kubectl get pods -n {{ .Release.Namespace }}
+            
+            echo "Stopping SC DAST pods..."
+            kubectl scale statefulset.apps -n {{ .Release.Namespace }} \
+              -l  app.kubernetes.io/instance={{ .Release.Name }},stopBeforeUpgrade=1 --replicas=0 || true
+            
+            echo "Waiting for SC DAST pods to terminate..."
+            kubectl wait --for=delete --timeout=90s -n {{ .Release.Namespace }} \
+              -l app.kubernetes.io/instance={{ .Release.Name }},stopBeforeUpgrade=1 pod || true
+            
+            echo "All SC DAST pods should be terminated."
+            kubectl get pods -n {{ .Release.Namespace }}
+            
+            echo "Upgrade preparation complete."
+      nodeSelector:
+      {{- with .Values.upgradePreparationJob.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.upgradePreparationJob.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+      {{- with .Values.upgradePreparationJob.tolerations }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+  backoffLimit: 0
+{{- end }}

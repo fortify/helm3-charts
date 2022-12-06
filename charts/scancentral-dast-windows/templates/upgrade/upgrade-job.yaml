@@ -30,11 +30,11 @@ spec:
           image: "{{ .Values.images.upgradeJob.repository }}:{{ .Values.images.upgradeJob.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.images.upgradeJob.pullPolicy }}
           args:
-            - configureEnvironment
-            - --mode
-            - autodeploy
-            - --settingsFile
-            - /app/appsettings.yaml
+            - "configureEnvironment"
+            - "--mode"
+            - "autodeploy"
+            - "--settingsFile"
+            - 'c:\settings\appsettings.yaml'
           env:
             - name: RELEASE_NAME
               value: {{ .Release.Name }}
@@ -47,8 +47,7 @@ spec:
             {{- end }}
           volumeMounts:
             - name: appsettings
-              mountPath: /app/appsettings.yaml
-              subPath: appsettings.yaml
+              mountPath: 'c:\settings\'
       volumes:
         - name: appsettings
           secret:

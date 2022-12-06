@@ -38,12 +38,32 @@ spec:
       securityContext:
         {{- toYaml .Values.utilityservice.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
+        - name: datastore
+          image: "{{ .Values.images.scannerDatastore.repository }}:{{ .Values.images.scannerDatastore.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.scannerDatastore.pullPolicy }}
+          volumeMounts:
+            - name: scandata
+              mountPath: /etc/wi/.widata/user/ScanData
+          env:
+            - name: MSSQL_IP_ADDRESS
+              value: 127.0.0.1
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_PID
+              value: "Express"
+            - name: SA_PASSWORD
+              # Hardcoded password as it is a local datastore
+              value: Str0ngP@ssw0rd?
+        - name: utilityservice
           securityContext:
             {{- toYaml .Values.utilityservice.securityContext | nindent 12 }}
           image: "{{ .Values.images.utilityservice.repository }}:{{ .Values.images.utilityservice.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.images.utilityservice.pullPolicy }}
           env:
+            - name: WI_MODE
+              value: "4"
+            - name: WI_API_HOST
+              value: 127.0.0.1
             - name: DBProvider
               value: {{ .Values.configuration.databaseSettings.databaseProvider }}
             - name: ConnectionStrings__DASTDB
@@ -51,29 +71,28 @@ spec:
                 secretKeyRef:
                   name: {{ include "secret.name" . }}
                   key: db-connection-string
+            - name: WI_SQLEXPRESS
+              # Hardcoded password as it is a local datastore
+              value: "Data Source=127.0.0.1;User Id=sa;Password=Str0ngP@ssw0rd?;"
             - name: Logging__LogLevel__Default
               value: {{ .Values.logLevel }}
-            - name: RCServerHost
-              value: "+"
-            - name: RCServerPort
-              value: "80"
-            - name: RCServerUseHTTPS
-              value: "false"
-            - name: RCServerAuthType
-              value: "none"
-            - name: mode
-              value: "4"
             - name: "ASPNETCORE_URLS"
               value: "http://+:5000"
             {{- with .Values.utilityservice.additionalEnvironment }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
+          volumeMounts:
+            - name: scandata
+              mountPath: /etc/wi/.widata/user/ScanData
           ports:
             - name: http
               containerPort: 5000
               protocol: TCP
           resources:
             {{- toYaml .Values.utilityservice.resources | nindent 12 }}
+      volumes:
+        - name: scandata
+          emptyDir: {}
       nodeSelector:
       {{- with .Values.utilityservice.nodeSelector }}
         {{- toYaml . | nindent 8 }}
