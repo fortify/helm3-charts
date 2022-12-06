@@ -59,7 +59,7 @@ spec:
             - name: LimAdminPassword
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "secret.name" . }}
+                  name: {{ include "lim-secret.fullname" . }}
                   key: lim-admin-password
             - name: LimAdminEmail
               value: {{ .Values.adminEmail | quote }}
@@ -76,7 +76,7 @@ spec:
               containerPort: 80
               protocol: TCP
           livenessProbe:
-            initialDelaySeconds: 30
+            initialDelaySeconds: 120
             failureThreshold: 6
             httpGet:
               path: /{{ .Values.adminWebSiteName }}

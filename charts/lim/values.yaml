@@ -6,6 +6,8 @@ adminWebSiteName: "LIM.Admin"
 serviceWebSiteName: "LIM.Service"
 apiSiteName: "LIM.API"
 adminUsername: "admin"
+# The following secret will be auto-generated if left blank. Check the NOTES after running
+# helm install for instructions to retrieve the auto-generated secret.
 adminPassword: ""
 adminEmail: "test@example.com"
 adminFriendlyName: "admin"
@@ -16,7 +18,7 @@ image:
   repository: fortifydocker/lim
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "22.1"
+  tag: ""
 
 nameOverride: ""
 fullnameOverride: ""
