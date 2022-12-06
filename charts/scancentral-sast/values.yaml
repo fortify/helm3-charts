@@ -1,0 +1,333 @@
+imagePullSecrets: []
+
+secrets:
+  # Kubernetes secret containing ScanCentral SAST sensitive data
+  # If empty, a secret will be created automatically using sensitive properties.
+  # If not empty, the existing secret referenced by "secretName" will be used and sensitive entries
+  # in this section will be ignored
+  secretName: ""
+
+  # (Required if secrets.secretName is blank) fortify.license file contents. (Tip) Use "--set-file=fortifyLicense=<FORTIFY_LICENSE_PATH>" argument
+  # when running helm install or upgrade.
+  fortifyLicense: ""
+
+  # The following secrets will be auto-generated if left blank. Check the NOTES after running
+  # helm install for instructions to retrieve the auto-generated secrets.
+  workerAuthToken: ""
+  clientAuthToken: ""
+  sscScanCentralCtrlSecret: ""
+
+controller:
+  enabled: true
+
+  sscUrl: ""
+  # Controller URL. Leave empty for default
+  thisUrl: ""
+  sscRemoteIp: "0.0.0.0/0"
+
+  # List of certificates in PEM format to be added to ScanCentral SAST Controller Trust Store
+  trustedCertificates: []
+  # Example
+  #  trustedCertificates:
+  #    - |
+  #      -----BEGIN CERTIFICATE-----
+  #      MIIC8DCCAdigAwIBAgIQPAgGnE3xTYtAaV+K7Ml+oDANBgkqhkiG9w0BAQsFADA0MTIwMAYDVQQD
+  #      EylNaWNyb3NvZnQgQXp1cmUgRmVkZXJhdGVkIFNTTyBDZXJ0aWZpY2F0ZTAeFw0yMjAzMDIwOTQ3
+  #      (truncated)
+  #      3iZZtYAkkw5q9ykrxgD7EWvcuUoeJ25cyu9P0+5fuTMIZ9XCPZdYM2VyZaKlOejJp3hjgJaSNvNW
+  #      vT0uvAf8qH+hFT7vOQAJ
+  #      -----END CERTIFICATE-----
+
+  image:
+    repository: fortifydocker/scancentral-sast-controller
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+  service:
+    # Define service for ScanCentral Controller
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    # Define Ingress for ScanCentral Controller API
+    enabled: false
+    className: ""
+    annotations: {}
+    # kubernetes.io/ingress.class: nginx
+
+    # RECOMMENDED: NGINX restricts uploads to 1M by default. Use this annotation to increase the max upload size
+    # nginx.ingress.kubernetes.io/proxy-body-size: 512m
+
+    hosts:
+      - host: scancentral-sast-controller.local
+        paths:
+          - path: /
+            pathType: Prefix
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+  podAnnotations: {}
+
+  # Environment variables. Format:
+  #  - name: varName
+  #    value: varValue
+  additionalEnvironment: {}
+
+  persistence:
+    enabled: true
+    ## @param persistence.storageClass Persistent Volume storage class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner
+    ##
+    storageClass: ""
+    ## @param persistence.accessModes [array] Persistent Volume access modes
+    ##
+    accessModes:
+      - ReadWriteOnce
+    ## @param persistence.accessMode Persistent Volume access mode (DEPRECATED: use `persistence.accessModes` instead)
+    ##
+    accessMode: ReadWriteOnce
+    ## @param persistence.size Persistent Volume size
+    ##
+    size: 10Gi
+    ## @param persistence.existingClaim The name of an existing PVC to use for persistence
+    ##
+    existingClaim: ""
+    ## @param persistence.selector Selector to match an existing Persistent Volume for WordPress data PVC
+    ## If set, the PVC can't have a PV dynamically provisioned for it
+    ## E.g.
+    ## selector:
+    ##   matchLabels:
+    ##     app: my-app
+    ##
+    selector: {}
+    ## @param persistence.annotations Persistent Volume Claim annotations
+    ##
+    annotations: {}
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+  #   memory: 128Mi
+
+
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  tolerations: []
+
+  affinity: {}
+
+
+# Map of worker types
+# Allows to configure worker groups with different Kubernetes configurations
+# It is possible to create new worker types by adding entries to this map.
+workers:
+  linux:
+
+    # Allows to enable/disable this component
+    enabled: true
+
+    # Worker Operating System (linux/windows)
+    os: linux
+
+    # Number of replicas
+    replicas: 1
+
+    # Controller URL. If empty, it will be configured automatically
+    # based on the endpoint of the Controller installed by the chart.
+    # If chart's Controller is disabled this property is required.
+    controllerUrl:
+
+    # Leave empty for default
+    scanTimeout: ""
+
+    autoUpdate:
+      # Update Workers' Rulepacks before starting
+      enabled: true
+      server:
+        # Leave empty for Fortify Update central server
+        url: ""
+        acceptKey: false
+        acceptSslCertificate: false
+      proxy:
+        # FQDN for the proxy. Do not include the protocol (http://). E.g. proxy.mycompany.com
+        host: ""
+        port: ""
+        username: ""
+        password: ""
+
+    image:
+      repository: fortifydocker/scancentral-sast-sensor
+      pullPolicy: IfNotPresent
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: ""
+
+    podAnnotations: {}
+
+    # Environment variables. Format:
+    #  - name: varName
+    #    value: varValue
+    additionalEnvironment: []
+
+    persistence:
+      enabled: false
+      ## @param persistence.storageClass Persistent Volume storage class
+      ## If defined, storageClassName: <storageClass>
+      ## If set to "-", storageClassName: "", which disables dynamic provisioning
+      ## If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner
+      ##
+      storageClass: ""
+      ## @param persistence.accessModes [array] Persistent Volume access modes
+      ##
+      accessModes:
+        - ReadWriteOnce
+      ## @param persistence.accessMode Persistent Volume access mode (DEPRECATED: use `persistence.accessModes` instead)
+      ##
+      accessMode: ReadWriteOnce
+      ## @param persistence.size Persistent Volume size
+      ##
+      size: 10Gi
+      ## @param persistence.selector Selector to match an existing Persistent Volume for WordPress data PVC
+      ## If set, the PVC can't have a PV dynamically provisioned for it
+      ## E.g.
+      ## selector:
+      ##   matchLabels:
+      ##     app: my-app
+      ##
+      selector: {}
+      ## @param persistence.annotations Persistent Volume Claim annotations
+      ##
+      annotations: {}
+
+    resources: {}
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      # limits:
+      #   cpu: 100m
+      #   memory: 128Mi
+      # requests:
+      #   cpu: 100m
+      #   memory: 128Mi
+
+    nodeSelector:
+      kubernetes.io/os: linux
+
+    tolerations: []
+
+    affinity: {}
+
+    topologySpreadConstraints: []
+
+  windows:
+
+    # Allows to enable/disable this component
+    enabled: false
+
+    # Worker Operating System (linux/windows)
+    os: windows
+
+    # Number of replicas
+    replicas: 1
+
+    # Controller URL. If empty, it will be configured automatically
+    # based on the endpoint of the Controller installed by the chart.
+    # If chart's Controller is disabled this property is required.
+    controllerUrl:
+
+    # Leave empty for default
+    scanTimeout: ""
+
+    autoUpdate:
+      # Update Workers' Rulepacks before starting
+      enabled: true
+      server:
+        # Leave empty for Fortify Update central server
+        url: ""
+        acceptKey: false
+        acceptSslCertificate: false
+      proxy:
+        # FQDN for the proxy. Do not include the protocol (http://). E.g. proxy.mycompany.com
+        host: ""
+        port: ""
+        username: ""
+        password: ""
+
+    image:
+      repository: fortifydocker/scancentral-sast-sensor-windows
+      pullPolicy: IfNotPresent
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: ""
+
+    podAnnotations: {}
+
+    additionalEnvironment: []
+
+    persistence:
+      enabled: false
+      ## @param persistence.storageClass Persistent Volume storage class
+      ## If defined, storageClassName: <storageClass>
+      ## If set to "-", storageClassName: "", which disables dynamic provisioning
+      ## If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner
+      ##
+      storageClass: ""
+      ## @param persistence.accessModes [array] Persistent Volume access modes
+      ##
+      accessModes:
+        - ReadWriteOnce
+      ## @param persistence.accessMode Persistent Volume access mode (DEPRECATED: use `persistence.accessModes` instead)
+      ##
+      accessMode: ReadWriteOnce
+      ## @param persistence.size Persistent Volume size
+      ##
+      size: 10Gi
+      ## @param persistence.selector Selector to match an existing Persistent Volume for WordPress data PVC
+      ## If set, the PVC can't have a PV dynamically provisioned for it
+      ## E.g.
+      ## selector:
+      ##   matchLabels:
+      ##     app: my-app
+      ##
+      selector: {}
+      ## @param persistence.annotations Persistent Volume Claim annotations
+      ##
+      annotations: {}
+
+    resources: {}
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      # limits:
+      #   cpu: 100m
+      #   memory: 128Mi
+      # requests:
+      #   cpu: 100m
+    #   memory: 128Mi
+
+    nodeSelector:
+      kubernetes.io/os: windows
+
+    tolerations:
+      # In case Windows nodes are tainted with windows:NoSchedule
+      - key: "os"
+        operator: "Equal"
+        value: "windows"
+        effect: "NoSchedule"
+
+    affinity: {}
+
+    topologySpreadConstraints: []

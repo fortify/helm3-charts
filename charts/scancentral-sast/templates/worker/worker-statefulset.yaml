@@ -1,0 +1,173 @@
+{{- range $k, $v := $.Values.workers }}
+{{- if $v.enabled }}
+{{- $workerName := printf "%s-worker-%s" (include "scancentral-sast.fullname" $) $k }}
+{{- $controllerUrl := "" }}
+{{- if $.Values.controller.enabled }}
+{{- $controllerUrl = $v.controllerUrl | default (printf "http://%s:%d/scancentral-ctrl/" (include "scancentral-sast-controller.fullname" $) ($.Values.controller.service.port | int)) }}
+{{- else }}
+{{- $controllerUrl = required (printf "Missing \"controllerUrl\" property at worker %s." $k) $v.controllerUrl }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $workerName }}
+spec:
+  replicas: {{ $v.replicas }}
+  serviceName: {{ $workerName }}
+  selector:
+    matchLabels:
+      component: worker
+      scancentral-sast.fortify.com/worker-type: {{ $k }}
+      {{- include "scancentral-sast.selectorLabels" $ | nindent 6 }}
+  template:
+    metadata:
+      {{- with $v.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}:
+      {{- end }}
+      labels:
+        component: worker
+        scancentral-sast.fortify.com/worker-type: {{ $k }}
+        scancentral-sast.fortify.com/worker-os: {{ $v.os }}
+        {{- include "scancentral-sast.selectorLabels" $ | nindent 8 }}
+    spec:
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- if eq $v.os "linux" }}
+        # must be kept in sync with image metadata
+        runAsUser: 1111
+        runAsGroup: 0
+        fsGroup: 0
+        {{- else }}
+        windowsOptions:
+          runAsUserName: "ContainerAdministrator"
+        {{- end }}
+      containers:
+        - name: worker
+          securityContext:
+            {{- toYaml $v.securityContext | nindent 12 }}
+          image: "{{ $v.image.repository }}:{{ $v.image.tag | default $.Chart.AppVersion }}"
+          imagePullPolicy: {{ $v.image.pullPolicy }}
+          env:
+            - name: SCANCENTRAL_WORKER_AUTH_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scancentral-sast-secret.fullname" $ }}
+                  key: scancentral-worker-auth-token
+            - name: SCANCENTRAL_ENABLE
+              value: "1"
+            - name: SCANCENTRAL_URL
+              value: {{ $controllerUrl | quote }}
+            {{- if $v.scanTimeout }}
+            - name: SCANCENTRAL_SCAN_TIMEOUT
+              value: {{ $v.scanTimeout | quote }}
+            {{- end }}
+            {{- if $v.autoUpdate.enabled }}
+            - name: FORTIFY_UPDATE_AUTO
+              value: "1"
+            {{- end }}
+            {{- if $v.autoUpdate.server.url }}
+            - name: FORTIFY_UPDATE_SERVER
+              value: {{ $v.autoUpdate.server.url | quote }}
+            {{- end }}
+            {{- if $v.autoUpdate.server.acceptKey }}
+            - name: FORTIFY_UPDATE_ACCEPT_KEY
+              value: "1"
+            {{- end }}
+            {{- if $v.autoUpdate.server.acceptSslCertificate }}
+            - name: FORTIFY_UPDATE_ACCEPT_SSL_CERTIFICATE
+              value: "1"
+            {{- end }}
+            {{- if $v.autoUpdate.proxy.host }}
+            - name: FORTIFY_UPDATE_PROXY_HOST
+              value: {{ $v.autoUpdate.proxy.host | quote }}
+            {{- end }}
+            {{- if $v.autoUpdate.proxy.port }}
+            - name: FORTIFY_UPDATE_PROXY_PORT
+              value: {{ $v.autoUpdate.proxy.port | quote }}
+            {{- end }}
+            {{- if $v.autoUpdate.proxy.username }}
+            - name: FORTIFY_UPDATE_PROXY_USERNAME
+              value: {{ $v.autoUpdate.proxy.username | quote }}
+            {{- end }}
+            {{- if $v.autoUpdate.proxy.password }}
+            - name: FORTIFY_UPDATE_PROXY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scancentral-sast-secret.fullname" $ }}
+                  key: {{ printf "scancentral-auto-update-proxy-password-%s" $k }}
+            {{- end }}
+            {{- with $v.additionalEnvironment }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            {{- if eq $v.os "linux" }}
+            - name: "data"
+              mountPath: "/fortify"
+            - name: secrets
+              mountPath: "/app/sca/fortify.license"
+              subPath: "fortify.license"
+            {{- else }}
+            - name: "data"
+              mountPath: 'C:\fortify'
+            - name: secrets
+              mountPath: 'C:\secrets'
+            {{- end }}
+          resources:
+            {{- toYaml $v.resources | nindent 12 }}
+      volumes:
+        - name: secrets
+          secret:
+            secretName: {{ include "scancentral-sast-secret.fullname" $ }}
+        - name: "data"
+          {{- if $v.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: "data"
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      nodeSelector:
+      {{- with $v.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $v.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+      {{- with $v.tolerations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      topologySpreadConstraints:
+      {{- with $v.topologySpreadConstraints }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+  {{- if $v.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: "data"
+        {{- if or $v.persistence.annotations }}
+        annotations:
+        :  {{- $v.persistence.annotations | nindent 4 }}
+        {{- end }}
+      spec:
+        accessModes:
+        {{- if not (empty $v.persistence.accessModes) }}
+        {{- range $v.persistence.accessModes }}
+          - {{ . | quote }}
+        {{- end }}
+        {{- else }}
+          - {{ $v.persistence.accessMode | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ $v.persistence.size | quote }}
+        storageClassName: {{ $v.persistence.storageClass }}
+  {{- end }}
+{{- end }}
+{{- end }}
