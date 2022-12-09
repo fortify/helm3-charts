@@ -1,0 +1,48 @@
+Secrets:
+{{ if or .Values.controller.enabled (include "anyWorkerEnabled" .) }}
+  - Worker Authentication Token:
+
+    kubectl get secret --namespace {{ .Release.Namespace }} {{ include "scancentral-sast-secret.fullname" . }} -o jsonpath="{.data.scancentral-worker-auth-token}" | base64 -d
+
+  - Client Authentication Token:
+
+    kubectl get secret --namespace {{ .Release.Namespace }} {{ include "scancentral-sast-secret.fullname" . }} -o jsonpath="{.data.scancentral-client-auth-token}" | base64 -d
+{{- end }}
+{{ if .Values.controller.enabled }}
+  - SSC ScanCentral Controller Shared Secret:
+
+    kubectl get secret --namespace {{ .Release.Namespace }} {{ include "scancentral-sast-secret.fullname" . }} -o jsonpath="{.data.scancentral-ssc-scancentral-ctrl-secret}" | base64 -d
+{{- end }}
+{{ if .Values.controller.enabled }}
+Connect to ScanCentral SAST Controller:
+{{ if .Values.controller.ingress.enabled }}
+  ScanCentral SAST Controller API URL:
+    {{- range .Values.controller.ingress.hosts }}
+
+    http://{{ .host }}/scancentral-ctrl/
+
+    or
+
+    https://{{ .host }}/scancentral-ctrl/
+    {{- end }}
+{{ else if eq .Values.controller.service.type "ClusterIP" }}
+  Create a port-forward to the service:
+
+    kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "scancentral-sast-controller.fullname" . }} 8080:{{ .Values.controller.service.port }}
+
+  ScanCentral SAST Controller API URL:
+
+    http://127.0.0.1:8080/scancentral-ctrl/
+{{ else if eq .Values.controller.service.type "LoadBalancer" }}
+  Obtain the LoadBalancer IP:
+
+    NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+          Watch the status with: 'kubectl get svc --namespace {{ .Release.Namespace }} -w {{ include "scancentral-sast.fullname" . }}'
+
+    kubectl get svc --namespace {{ .Release.Namespace }} {{ include "scancentral-sast-controller.fullname" . }} --template "{{ "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}" }}"
+
+  ScanCentral SAST Controller API URL:
+
+    http://<SERVICE_IP>:{{ .Values.controller.service.port }}/scancentral-ctrl/
+{{- end }}
+{{- end }}

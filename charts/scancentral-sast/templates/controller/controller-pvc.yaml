@@ -1,0 +1,23 @@
+{{- if and .Values.controller.enabled .Values.controller.persistence.enabled (not .Values.controller.persistence.existingClaim) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: data-{{ include "scancentral-sast-controller.fullname" . }}
+  {{- if or .Values.controller.persistence.annotations }}
+  annotations:
+    {{- .Values.controller.persistence.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+  {{- if not (empty .Values.controller.persistence.accessModes) }}
+  {{- range .Values.controller.persistence.accessModes }}
+    - {{ . | quote }}
+  {{- end }}
+  {{- else }}
+    - {{ .Values.controller.persistence.accessMode | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.controller.persistence.size | quote }}
+  storageClassName: {{ .Values.controller.persistence.storageClass }}
+{{- end }}
