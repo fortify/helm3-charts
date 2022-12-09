@@ -1,0 +1,39 @@
+{{- $context := merge (dict "component" "service") . -}}
+{{- $type := .Values.service.type -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ssc.fullcomponentname" $context }}
+  labels:
+    {{- include "ssc.labels" $context | nindent 4 -}}
+{{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 -}}
+{{- end }}
+spec:
+  type: {{ .Values.service.type }}
+{{- with .Values.service.clusterIP }}
+  clusterIP: {{ . }}
+{{- end }}
+{{- with .Values.service.loadBalancerIP }}
+  loadBalancerIP: {{ . }}
+{{- end }}
+  selector:
+    {{- include "ssc.selector" (merge (dict "component" "webapp") . ) | nindent 4 }}
+  ports:
+  {{- with .Values.service.httpPort }}
+    - name: http-web
+      targetPort: http-web
+    {{- if eq $type "ClusterIP" }}
+      nodePort: 0
+    {{- end }}
+      port: {{ . | int }}
+      protocol: TCP
+  {{- end }}
+    - name: https-web
+      targetPort: https-web
+    {{- if eq $type "ClusterIP" }}
+      nodePort: 0
+    {{- end }}
+      port: {{ required "The service.httpsPort config value is required!" .Values.service.httpsPort | int }}
+      protocol: TCP

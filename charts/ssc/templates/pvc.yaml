@@ -1,0 +1,21 @@
+{{- $context := merge (dict "component" "pvc") . -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "ssc.fullcomponentname" $context }}
+  labels:
+    {{- include "ssc.labels" $context | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+{{- with .Values.persistentVolumeClaim.storageClassName }}
+  storageClassName: "{{ . }}"
+{{- end }}
+  resources:
+    requests:
+      storage: {{ required "The persistentVolumeClaim.size config value is required!" .Values.persistentVolumeClaim.size }}
+{{- with .Values.persistentVolumeClaim.selector }}
+  selector:
+    {{- toYaml . | nindent 4 }}
+{{- end }}

@@ -1,0 +1,127 @@
+{{- $context := merge (dict "component" "webapp") . -}}
+{{- $urlPort := required "The service.httpsPort config value is required!" .Values.service.httpsPort | int -}}
+{{- if gt (.Values.urlPort | int) 0 -}}
+{{-   $urlPort = .Values.urlPort | int -}}
+{{- end -}}
+{{- $urlAuthority := printf "%s:%d" (required "The urlHost config value is required! " .Values.urlHost | toString | trim) $urlPort -}}
+{{- $urlPathPrefix := printf "/%s" (trimAll "/" .Values.sscPathPrefix) | trimSuffix "/" -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "ssc.fullcomponentname" $context }}
+  labels:
+    {{- include "ssc.labels" $context | nindent 4 }}
+spec:
+  serviceName: "webapp"
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ssc.selector" $context | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "ssc.selector" $context | nindent 8 }}
+    spec:
+      containers:
+        - name: webapp
+          ports:
+            - name: http-web
+              containerPort: 8080
+              protocol: TCP
+            - name: https-web
+              containerPort: 8443
+              protocol: TCP
+          readinessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            httpGet:
+              path: "{{ $urlPathPrefix }}/images/favicon.ico"
+              port: https-web
+              scheme: HTTPS
+              httpHeaders:
+                - name: Host
+                  value: {{ $urlAuthority }}
+          env:
+            - name: SSC_AUTOCONFIG_HOST_URL
+              value: "{{ printf "https://%s%s" $urlAuthority $urlPathPrefix }}"
+            - name: HTTP_SERVER_SSC_PATH_PREFIX
+              value: "{{ $urlPathPrefix }}"
+            - name: CATALINA_OPTS
+              value: "-XX:+UseContainerSupport -XX:MaxRAMPercentage={{ required "The jvmMaxRAMPercentage config value is required!" .Values.jvmMaxRAMPercentage | int }}.0 {{ .Values.jvmExtraOptions }}"
+            - name: HTTP_SERVER_CERTIFICATE_VERIFICATION
+              value: "{{ required "The httpClientCertificateVerification config value is required!" .Values.httpClientCertificateVerification | toString | trim }}"
+          {{- with .Values.secretRef }}
+            {{- if .keys.sscAutoconfigEntry }}
+            - name: COM_FORTIFY_SSC_LICENSEPATH
+              value: "/app/secrets/{{ required "The secretRef.keys.sscLicenseEntry config value is required!" .keys.sscLicenseEntry | toString | trim }}"
+            - name: COM_FORTIFY_SSC_AUTOCONFIGPATH
+              value: "/app/secrets/{{ required "The secretRef.keys.sscAutoconfigEntry config value is required!" .keys.sscAutoconfigEntry | toString | trim }}"
+            {{- end }}
+            {{- with .keys.sscSecretKeyEntry }}
+            - name: COM_FORTIFY_SSC_SECRETKEY
+              value: "/app/secrets/{{ required "The secretRef.keys.sscSecretKeyEntry config value is required!" . | toString | trim }}"
+            {{- end }}
+            - name: HTTP_SERVER_CERTIFICATE_KEYSTORE_FILE
+              value: "/app/secrets/{{ required "The secretRef.keys.httpCertificateKeystoreFileEntry config value is required!" .keys.httpCertificateKeystoreFileEntry | toString | trim }}"
+            - name: HTTP_SERVER_CERTIFICATE_KEYSTORE_PASSWORD_FILE
+              value: "/app/secrets/{{ required "The secretRef.keys.httpCertificateKeystorePasswordEntry config value is required!" .keys.httpCertificateKeystorePasswordEntry | toString | trim }}"
+            - name: HTTP_SERVER_CERTIFICATE_KEY_PASSWORD_FILE
+              value: "/app/secrets/{{ required "The secretRef.keys.httpCertificateKeyPasswordEntry config value is required!" .keys.httpCertificateKeyPasswordEntry | toString | trim }}"
+            {{- if .keys.httpTruststoreFileEntry }}
+            - name: HTTP_SERVER_TRUSTSTORE_FILE
+              value: "/app/secrets/{{ required "The secretRef.keys.httpTruststoreFileEntry config value is required!" .keys.httpTruststoreFileEntry | toString | trim }}"
+            - name: HTTP_SERVER_TRUSTSTORE_PASSWORD_FILE
+              value: "/app/secrets/{{ required "The secretRef.keys.httpTruststorePasswordEntry config value is required!" .keys.httpTruststorePasswordEntry | toString | trim }}"
+            {{- end }}
+            {{- if .keys.jvmTruststoreFileEntry }}
+            - name: JVM_TRUSTSTORE_FILE
+              value: "/app/secrets/{{ required "The secretRef.keys.jvmTruststoreFileEntry config value is required!" .keys.jvmTruststoreFileEntry | toString | trim }}"
+            - name: JVM_TRUSTSTORE_PASSWORD_FILE
+              value: "/app/secrets/{{ required "The secretRef.keys.jmvTruststorePasswordEntry config value is required!" .keys.jmvTruststorePasswordEntry | toString | trim }}"
+            {{- end }}
+          {{- end }}
+          {{- with .Values.environment }}
+            {{- toYaml . | nindent 12 -}}
+          {{- end }}
+          image: "{{ .Values.image.repositoryPrefix }}{{ .Values.image.webapp }}:{{ include "ssc.image.tag" $context }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          volumeMounts:
+            - name: secrets-volume
+              readOnly: true
+              mountPath: "/app/secrets"
+            - name: persistent-volume
+              mountPath: "/fortify"
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+      volumes:
+        - name: secrets-volume
+          secret:
+            secretName: {{ required "The secretRef.name config value is required!" .Values.secretRef.name }}
+        - name: persistent-volume
+          persistentVolumeClaim:
+            claimName: {{ include "ssc.fullcomponentname" (merge (dict "component" "pvc") . ) }}
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 -}}
+    {{- end }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        # must be kept in sync with image metadata
+        runAsUser: 1111
+        runAsGroup: 0
+        fsGroup: 0
