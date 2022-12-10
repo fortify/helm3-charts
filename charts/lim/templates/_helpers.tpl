@@ -53,6 +53,25 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{/*
 Secret Name
 */}}
-{{- define "secret.name" -}}
-{{- .Values.secretName | default (printf "%s-lim-secret" .Release.Name | trunc 63 | trimSuffix "-") -}}
+{{- define "lim-secret.fullname" -}}
+{{- .Values.secretName | default (include "lim.fullname" .) -}}
+{{- end -}}
+
+{{- define "secrets.passwords.manage" -}}
+{{- $password := "" }}
+{{- $providedPassword := .providedPassword }}
+{{- $passwordLength := default 10 .length }}
+{{- $secretData := (lookup "v1" "Secret" $.context.Release.Namespace .secret).data }}
+{{- if $secretData }}
+  {{- if hasKey $secretData .key }}
+    {{- $password = index $secretData .key }}
+  {{- else }}
+    {{- printf "\nPASSWORDS ERROR: The secret \"%s\" does not contain the key \"%s\"\n" .secret .key | fail -}}
+  {{- end -}}
+{{- else if $providedPassword }}
+  {{- $password = $providedPassword | toString | b64enc | quote }}
+{{- else }}
+  {{- $password = randAlphaNum $passwordLength | b64enc | quote }}
+{{- end }}
+{{- printf "%s" $password -}}
 {{- end -}}

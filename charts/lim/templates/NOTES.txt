@@ -23,3 +23,7 @@
   echo "Visit http://127.0.0.1:8080/{{ .Values.serviceWebSiteName }} for Service application."
   kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
 {{- end }}
+
+2. Retrieve LIM Admin password with:
+
+    kubectl get secret --namespace {{ .Release.Namespace }} {{ include "lim-secret.fullname" . }} -o jsonpath="{.data.lim-admin-password}" | base64 -d
