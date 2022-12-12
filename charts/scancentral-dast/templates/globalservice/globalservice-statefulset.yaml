@@ -1,18 +1,19 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "dast-api.fullname" . }}
+  name: {{ include "dast-globalservice.fullname" . }}
   labels:
-    component: api
+    component: globalservice
     # This component will be stopped before the upgrade job runs
     stopBeforeUpgrade: "1"
     {{- include "dast.labels" . | nindent 4 }}
 spec:
   replicas: 1
-  serviceName: {{ include "dast-api.fullname" . }}
+  serviceName: {{ include "dast-globalservice.fullname" . }}
   selector:
     matchLabels:
-      component: api
+      component: globalservice
+      # This component will be stopped before the upgrade job runs
       {{- include "dast.selectorLabels" . | nindent 6 }}
   template:
     metadata:
@@ -22,11 +23,11 @@ spec:
         {{- if .Values.podAnnotations }}
         {{- toYaml .Values.podAnnotations | nindent 8 }}
         {{- end }}
-        {{- if .Values.api.podAnnotations }}
+        {{- if .Values.globalservice.podAnnotations }}
         {{- toYaml .Values.api.podAnnotations | nindent 8 }}
         {{- end }}
       labels:
-        component: api
+        component: globalservice
         # This component will be stopped before the upgrade job runs
         stopBeforeUpgrade: "1"
         {{- include "dast.selectorLabels" . | nindent 8 }}
@@ -36,13 +37,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext:
-        {{- toYaml .Values.api.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.globalservice.podSecurityContext | nindent 8 }}
       containers:
-        - name: api
+        - name: globalservice
           securityContext:
-            {{- toYaml .Values.api.securityContext | nindent 12 }}
-          image: "{{ .Values.images.api.repository }}:{{ .Values.images.api.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.images.api.pullPolicy }}
+            {{- toYaml .Values.globalservice.securityContext | nindent 12 }}
+          image: "{{ .Values.images.globalservice.repository }}:{{ .Values.images.globalservice.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.globalservice.pullPolicy }}
           env:
             - name: DBProvider
               value: {{ .Values.configuration.databaseSettings.databaseProvider }}
@@ -51,40 +52,22 @@ spec:
                 secretKeyRef:
                   name: {{ include "secret.name" . }}
                   key: db-connection-string
-            - name: ASPNETCORE_URLS
-              value: 'http://+'
             - name: Logging__LogLevel__Default
               value: {{ .Values.logLevel }}
-            {{- with .Values.api.additionalEnvironment }}
+            {{- with .Values.globalservice.additionalEnvironment }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
-          ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
-          livenessProbe:
-            initialDelaySeconds: 60
-            failureThreshold: 6
-            httpGet:
-              path: /
-              port: http
-              scheme: HTTP
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-              scheme: HTTP
           resources:
-            {{- toYaml .Values.api.resources | nindent 12 }}
+            {{- toYaml .Values.globalservice.resources | nindent 12 }}
       nodeSelector:
-      {{- with .Values.api.nodeSelector }}
+      {{- with .Values.globalservice.nodeSelector }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.api.affinity }}
+      {{- with .Values.globalservice.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       tolerations:
-      {{- with .Values.api.tolerations }}
+      {{- with .Values.globalservice.tolerations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- A Kubernetes cluster with linux nodes.
+- A Kubernetes cluster containing at least one Windows node.
 - kubectl (https://kubernetes.io/docs/tasks/tools/).
 - Helm 3 (https://github.com/helm/helm/releases).
 
@@ -20,11 +20,11 @@ ScanCentral DAST can be initialized, upgraded or configured automatically if `au
 
 #### Method 1: Load fortifydocker/scancentral-dast-config-sb from tar
 
-- On a machine with docker support, sign in to Fortify Customer Portal and download **scancentral-dast-config-sb.tar**.
+- On a Windows Server 2019 with docker support, sign in to Fortify Customer Portal and download **scancentral-dast-config-sb.tar**.
 - On a command prompt, run `docker load scancentral-dast-config-sb.tar` . This command will load the **fortifydocker/scancentral-dast-config-sb:22.2** image from the tar file.
 - Run `docker tag fortifydocker/scancentral-dast-config-sb:22.2 <DOCKER_REGISTRY>/scancentral-dast-config-sb:22.2`. Replace `<DOCKER_REGISTRY>` with your docker registry. It must be accessible from your Kubernetes cluster.
 - Run `docker push <DOCKER_REGISTRY>/scancentral-dast-config-sb:22.2`. This command will push the docker image to `<DOCKER_REGISTRY>`.
-- Change the image reference for the `upgradeJob` at `values.yaml`.
+- Change the image reference for the `UpgradeJob` at `values.yaml`.
 
 ```yaml
 images:
@@ -40,18 +40,18 @@ images:
 #### Method 2: Download the SecureBase and build a new docker image
 
 - Sign in to Fortify Customer Portal and download DefaultData.zip.
-- On a machine with docker support, create a directory and a file named Dockerfile in it with this content:
+- On a Windows Server 2019 with docker support, create a directory and a file named Dockerfile in it with this content:
 
 ```dockerfile
 FROM fortifydocker/scancentral-dast-config:22.2
 
-COPY DefaultData.zip /app/
+COPY DefaultData.zip C:/app/
 ```
 
 - Place DefaultData.zip in that directory.
 - Open a command prompt, change to the Dockerfile's directory and run: `docker build -t <DOCKER_REGISTRY>/scancentral-dast-config-sb:22.2 .`. This will build a new image with DefaultData.zip at C:\app directory. Replace `<DOCKER_REGISTRY>` with your docker registry. It must be accessible from your Kubernetes cluster.
 - Run `docker push <DOCKER_REGISTRY>/scancentral-dast-config-sb:22.2`. This command will push the docker image to `<DOCKER_REGISTRY>`.
-- Change the image reference for the `upgradeJob` at `values.yaml`.
+- Change the image reference for the `UpgradeJob` at `values.yaml`.
 
 ```yaml
 images:
@@ -123,7 +123,7 @@ ingress:
       # endpoint can be reached. Other controllers use other Annotations.
       kubernetes.io/ingress.class: addon-http-application-routing
     hosts:
-      - host: dast-api.<CLUSTER_SPECIFIC_DNS_ZONE>
+      - host: dastapi.<CLUSTER_SPECIFIC_DNS_ZONE>
         paths:
           - path: /
             pathType: Prefix

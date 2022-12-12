@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "dast-api.fullname" . }}
+  name: {{ include "dast-utilityservice.fullname" . }}
   labels:
-    component: api
+    component: utilityservice
     # This component will be stopped before the upgrade job runs
     stopBeforeUpgrade: "1"
     {{- include "dast.labels" . | nindent 4 }}
 spec:
   replicas: 1
-  serviceName: {{ include "dast-api.fullname" . }}
+  serviceName: {{ include "dast-utilityservice.fullname" . }}
   selector:
     matchLabels:
-      component: api
+      component: utilityservice
       {{- include "dast.selectorLabels" . | nindent 6 }}
   template:
     metadata:
@@ -22,11 +22,11 @@ spec:
         {{- if .Values.podAnnotations }}
         {{- toYaml .Values.podAnnotations | nindent 8 }}
         {{- end }}
-        {{- if .Values.api.podAnnotations }}
-        {{- toYaml .Values.api.podAnnotations | nindent 8 }}
+        {{- if .Values.utilityservice.podAnnotations }}
+        {{- toYaml .Values.utilityservice.podAnnotations | nindent 8 }}
         {{- end }}
       labels:
-        component: api
+        component: utilityservice
         # This component will be stopped before the upgrade job runs
         stopBeforeUpgrade: "1"
         {{- include "dast.selectorLabels" . | nindent 8 }}
@@ -36,13 +36,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext:
-        {{- toYaml .Values.api.podSecurityContext | nindent 8 }}
+        {{- toYaml .Values.utilityservice.podSecurityContext | nindent 8 }}
       containers:
-        - name: api
+        - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml .Values.api.securityContext | nindent 12 }}
-          image: "{{ .Values.images.api.repository }}:{{ .Values.images.api.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.images.api.pullPolicy }}
+            {{- toYaml .Values.utilityservice.securityContext | nindent 12 }}
+          image: "{{ .Values.images.utilityservice.repository }}:{{ .Values.images.utilityservice.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.utilityservice.pullPolicy }}
           env:
             - name: DBProvider
               value: {{ .Values.configuration.databaseSettings.databaseProvider }}
@@ -51,40 +51,38 @@ spec:
                 secretKeyRef:
                   name: {{ include "secret.name" . }}
                   key: db-connection-string
-            - name: ASPNETCORE_URLS
-              value: 'http://+'
             - name: Logging__LogLevel__Default
               value: {{ .Values.logLevel }}
-            {{- with .Values.api.additionalEnvironment }}
+            - name: RCServerHost
+              value: "+"
+            - name: RCServerPort
+              value: "80"
+            - name: RCServerUseHTTPS
+              value: "false"
+            - name: RCServerAuthType
+              value: "none"
+            - name: mode
+              value: "4"
+            - name: "ASPNETCORE_URLS"
+              value: "http://+:5000"
+            {{- with .Values.utilityservice.additionalEnvironment }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 5000
               protocol: TCP
-          livenessProbe:
-            initialDelaySeconds: 60
-            failureThreshold: 6
-            httpGet:
-              path: /
-              port: http
-              scheme: HTTP
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-              scheme: HTTP
           resources:
-            {{- toYaml .Values.api.resources | nindent 12 }}
+            {{- toYaml .Values.utilityservice.resources | nindent 12 }}
       nodeSelector:
-      {{- with .Values.api.nodeSelector }}
+      {{- with .Values.utilityservice.nodeSelector }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.api.affinity }}
+      {{- with .Values.utilityservice.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       tolerations:
-      {{- with .Values.api.tolerations }}
+      {{- with .Values.utilityservice.tolerations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

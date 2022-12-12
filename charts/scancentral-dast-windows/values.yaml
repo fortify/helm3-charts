@@ -6,23 +6,19 @@ images:
 
   api:
     repository: fortifydocker/scancentral-dast-api
-    tag: "22.2.ubi.8.6"
+    tag: "22.2"
     pullPolicy: "IfNotPresent"
   globalservice:
     repository: fortifydocker/scancentral-dast-globalservice
-    tag: "22.2.ubi.8.6"
+    tag: "22.2"
     pullPolicy: "IfNotPresent"
   scanner:
-    repository: fortifydocker/dast-scanner
-    tag: "22.2.ubi.8.6"
-    pullPolicy: "IfNotPresent"
-  scannerDatastore:
-    repository: mcr.microsoft.com/mssql/server
-    tag: "2022-latest"
+    repository: fortifydocker/webinspect
+    tag: "22.2"
     pullPolicy: "IfNotPresent"
   utilityservice:
-    repository: fortifydocker/dast-scanner
-    tag: "22.2.ubi.8.6"
+    repository: fortifydocker/webinspect
+    tag: "22.2"
     pullPolicy: "IfNotPresent"
   twofactorauth:
     repository: fortifydocker/fortify-2fa
@@ -36,7 +32,7 @@ images:
     # This image must include the Securebase if DAST needs to be initialized/upgraded.
     # The image without SecureBase can only be used for ScanCentral DAST configuration.
     repository: fortifydocker/scancentral-dast-config
-    tag: "22.2.ubi.8.6"
+    tag: "22.2"
     pullPolicy: "IfNotPresent"
   upgradePreparationJob:
     repository: bitnami/kubectl
@@ -120,7 +116,7 @@ configuration:
     sSLPreferenceType: NoSSL # Allowed values: GenerateCertificate, UseExistingCertificate, NoSSL
     # generateCertificateModel is required if sSLPreferenceType =  GenerateCertificate
     generateCertificateModel:
-      certificateDirectory: /directory_where_certificate_is_saved
+      certificateDirectory: c:\directory_where_certificate_is_saved
       host: dast-api
       password: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
       validity: 1000
@@ -128,13 +124,13 @@ configuration:
       email: email@domain.com
     # existingCertificateModel is required if sSLPreferenceType =  UseExistingCertificate
     existingCertificateModel:
-      certificateFullPath: /path_to_cert/dast_api.cert
+      certificateFullPath: c:\path_to_cert\dast_api.cert
       password: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
   utilityWorkerServiceSSLSettings:
     sSLPreferenceType: NoSSL # Allowed values: GenerateCertificate, UseExistingCertificate, NoSSL
     # generateCertificateModel is required if sSLPreferenceType =  GenerateCertificate
     generateCertificateModel:
-      certificateDirectory: /directory_where_certificate_is_saved
+      certificateDirectory: c:\directory_where_certificate_is_saved
       host: dast-utility-service
       password: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
       validity: 1000
@@ -142,7 +138,7 @@ configuration:
       email: email@domain.com
     # existingCertificateModel is required if sSLPreferenceType =  UseExistingCertificate
     existingCertificateModel:
-      certificateFullPath: /path_to_cert/dast_utility_service.cert
+      certificateFullPath: c:\path_to_cert\dast_utility_service.cert
       password: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
   environmentSettings:
     allowNonTrustedServerCertificate: true # Allowed values: true, false
@@ -154,7 +150,7 @@ configuration:
       proxyBypassList: dast-api,dast-utility-service,lim-server-instance,ssc-instance
   applySecureBase: true # Allowed values: true, false
   # secureBasePath is required if applySecureBase =  true
-  secureBasePath: /app/DefaultData.zip
+  secureBasePath: c:\app\DefaultData.zip
 
 # Ingress settings
 ingress:
@@ -219,9 +215,14 @@ api:
   resources: {}
 
   nodeSelector:
-    kubernetes.io/os: linux
+    kubernetes.io/os: windows
 
-  tolerations: []
+  tolerations:
+    # In case Windows nodes are tainted with windows:NoSchedule
+    - key: "os"
+      operator: "Equal"
+      value: "windows"
+      effect: "NoSchedule"
 
   affinity: {}
 
@@ -238,9 +239,14 @@ globalservice:
   resources: {}
 
   nodeSelector:
-    kubernetes.io/os: linux
+    kubernetes.io/os: windows
 
-  tolerations: []
+  tolerations:
+    # In case Windows nodes are tainted with windows:NoSchedule
+    - key: "os"
+      operator: "Equal"
+      value: "windows"
+      effect: "NoSchedule"
 
   affinity: {}
 
@@ -261,9 +267,14 @@ utilityservice:
   resources: {}
 
   nodeSelector:
-    kubernetes.io/os: linux
+    kubernetes.io/os: windows
 
-  tolerations: []
+  tolerations:
+    # In case Windows nodes are tainted with windows:NoSchedule
+    - key: "os"
+      operator: "Equal"
+      value: "windows"
+      effect: "NoSchedule"
 
   affinity: {}
 
@@ -284,9 +295,14 @@ scanner:
   resources: {}
 
   nodeSelector:
-    kubernetes.io/os: linux
+    kubernetes.io/os: windows
 
-  tolerations: []
+  tolerations:
+    # In case Windows nodes are tainted with windows:NoSchedule
+    - key: "os"
+      operator: "Equal"
+      value: "windows"
+      effect: "NoSchedule"
 
   affinity: {}
 
@@ -399,8 +415,13 @@ upgradeJob:
   resources: {}
 
   nodeSelector:
-    kubernetes.io/os: linux
+    kubernetes.io/os: windows
 
   affinity: {}
 
-  tolerations: []
+  tolerations:
+    # In case Windows nodes are tainted with windows:NoSchedule
+    - key: "os"
+      operator: "Equal"
+      value: "windows"
+      effect: "NoSchedule"
