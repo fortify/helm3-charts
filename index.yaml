@@ -34,6 +34,16 @@ entries:
   scancentral-dast:
   - apiVersion: v2
     appVersion: "22.2"
+    created: "2023-01-24T09:56:59.037606522Z"
+    description: A Helm chart for ScanCentral DAST
+    digest: 1afb6a99e7ad257bf42ab4e0b27bd6840c45843404ac3cfedf1c44ee4de864ed
+    name: scancentral-dast
+    type: application
+    urls:
+    - https://github.com/fortify/helm3-charts/releases/download/scancentral-dast-22.2.1/scancentral-dast-22.2.1.tgz
+    version: 22.2.1
+  - apiVersion: v2
+    appVersion: "22.2"
     created: "2022-12-12T14:45:13.258943654Z"
     description: A Helm chart for ScanCentral DAST
     digest: eb141e64206616ec4f5c17208a58bf1ee7af3108679f1d27d0ca3156a34811fb
@@ -53,6 +63,16 @@ entries:
     - https://github.com/fortify/helm3-charts/releases/download/scancentral-dast-22.1.0/scancentral-dast-22.1.0.tgz
     version: 22.1.0
   scancentral-dast-windows:
+  - apiVersion: v2
+    appVersion: "22.2"
+    created: "2023-01-24T09:56:59.198773044Z"
+    description: A Helm chart for ScanCentral DAST (with Windows containers)
+    digest: d112b07c616c8e43076781dfed25b6cee16e3e32bc95cef15d31058394a49b6a
+    name: scancentral-dast-windows
+    type: application
+    urls:
+    - https://github.com/fortify/helm3-charts/releases/download/scancentral-dast-windows-22.2.1/scancentral-dast-windows-22.2.1.tgz
+    version: 22.2.1
   - apiVersion: v2
     appVersion: "22.2"
     created: "2022-12-12T14:45:13.434939266Z"
@@ -103,4 +123,4 @@ entries:
     urls:
     - https://github.com/fortify/helm3-charts/releases/download/ssc-1.1.2220176/ssc-1.1.2220176.tgz
     version: 1.1.2220176
-generated: "2023-01-19T07:54:06.817784077Z"
+generated: "2023-01-24T09:56:59.198924843Z"
