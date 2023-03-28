@@ -1,0 +1,43 @@
+imagePullSecrets:
+  - name: fortifydocker
+
+images:
+  upgradeJob:
+    repository: fortify-docker.svsartifactory.swinfra.net/fortify/dast-config-sb/22.2.0/22.2.0.271-ubi8.6.0
+    tag: latest
+
+configuration:
+  databaseSettings:
+    databaseProvider: PostgreSQL
+    server: postgresql
+    database: scdast_db
+    dboLevelDatabaseAccount:
+      username: postgres
+      password: password
+    standardDatabaseAccount:
+      username: postgres
+      password: password
+  serviceToken: thisisaservicetoken
+  sSCSettings:
+    serviceAccountUserName: admin
+    serviceAccountPassword: Toughpass1!
+  dASTApiSettings:
+    corsOrigins:
+      - https://ssc.192-168-49-2.nip.io
+  lIMSettings:
+    serviceAccountUserName: admin
+    serviceAccountPassword: Toughpass1!
+    defaultLimPoolName: sensors
+    defaultLimPoolPassword: Toughpass1!
+    useLimRestApi: true
+ingress:
+  api:
+    hosts:
+      - host: scdastapi.192-168-49-2.nip.io
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - secretName: wildcard-certificate
+        hosts:
+          - scdastapi.192-168-49-2.nip.io

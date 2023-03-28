@@ -1,0 +1,19 @@
+controller:
+  ingress:
+    enabled: true
+    hosts:
+    - host: scsast.192-168-49-2.nip.io
+      paths:
+      - path: /
+        pathType: Prefix
+    tls:
+    - hosts:
+      - scsast.192-168-49-2.nip.io
+      secretName: wildcard-certificate
+  persistence:
+    enabled: false
+  sscUrl: https://ssc.192-168-49-2.nip.io
+  thisUrl: https://scsast.192-168-49-2.nip.io
+  trustedCertificates: []
+imagePullSecrets:
+- name: fortifydocker

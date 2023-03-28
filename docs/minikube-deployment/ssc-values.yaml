@@ -1,0 +1,14 @@
+imagePullSecrets:
+- name: fortifydocker
+resources: null
+secretRef:
+  keys:
+    httpCertificateKeyPasswordEntry: ssc-service.jks.key.password
+    httpCertificateKeystoreFileEntry: ssc-service.jks
+    httpCertificateKeystorePasswordEntry: ssc-service.jks.password
+    jmvTruststorePasswordEntry: truststore.password
+    jvmTruststoreFileEntry: truststore
+    sscAutoconfigEntry: ssc.autoconfig
+    sscLicenseEntry: fortify.license
+  name: ssc
+urlHost: ssc.192-168-49-2.nip.io

@@ -1,0 +1,3 @@
+auth:
+  database: scdast_db
+  postgresPassword: password
