@@ -1,1 +1,1 @@
-This repository contains Fortify helm charts.
+Inside this repository, you'll find Fortify Helm charts. To learn how to add this repository to Helm, please refer to the instructions in [USAGE.md](USAGE.md). Additionally, for a practical deployment example, please see the details in [docs/minikube-deployment](docs/minikube-deployment).
