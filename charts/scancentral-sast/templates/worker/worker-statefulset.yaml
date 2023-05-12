@@ -31,6 +31,9 @@ spec:
         scancentral-sast.fortify.com/worker-type: {{ $k }}
         scancentral-sast.fortify.com/worker-os: {{ $v.os }}
         {{- include "scancentral-sast.selectorLabels" $ | nindent 8 }}
+        {{- if $v.podLabels }}
+        {{- toYaml $v.podLabels | nindent 8 }}
+        {{- end }}
     spec:
       {{- with $.Values.imagePullSecrets }}
       imagePullSecrets:
