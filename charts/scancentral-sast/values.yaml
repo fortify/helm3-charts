@@ -71,6 +71,8 @@ controller:
 
   podAnnotations: {}
 
+  podLabels: {}
+
   # Environment variables. Format:
   #  - name: varName
   #    value: varValue
@@ -176,6 +178,8 @@ workers:
 
     podAnnotations: {}
 
+    podLabels: {}
+
     # Environment variables. Format:
     #  - name: varName
     #    value: varValue
@@ -273,6 +277,8 @@ workers:
       tag: ""
 
     podAnnotations: {}
+
+    podLabels: {}
 
     additionalEnvironment: []
 
