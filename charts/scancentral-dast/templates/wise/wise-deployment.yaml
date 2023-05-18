@@ -25,6 +25,9 @@ spec:
       labels:
         component: wise
         {{- include "dast.selectorLabels" . | nindent 8 }}
+        {{- with .Values.wise.extraPodLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       serviceAccountName: {{ include "dast-wise.fullname" . }}
       terminationGracePeriodSeconds: 60

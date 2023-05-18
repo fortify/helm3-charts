@@ -1,4 +1,0 @@
-{{- if .Values.wise.enabled -}}
-WISE is enabled. Use this URL to configure the Autoscaling Sensor Pool at SSC > DAST. Websocket URL: ws://{{ .Values.wise.ingressHost }} .
-{{- end }}
-

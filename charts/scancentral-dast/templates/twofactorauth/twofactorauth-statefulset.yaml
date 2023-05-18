@@ -1,3 +1,4 @@
+{{- if .Values.twofactorauth.enabled }}
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -27,6 +28,9 @@ spec:
       labels:
         component: twofactorauth
         {{- include "dast.selectorLabels" . | nindent 8 }}
+        {{- with .Values.twofactorauth.extraPodLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -77,3 +81,4 @@ spec:
       {{- with .Values.twofactorauth.tolerations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end }}

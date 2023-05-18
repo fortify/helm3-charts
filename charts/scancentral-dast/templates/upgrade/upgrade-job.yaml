@@ -10,7 +10,7 @@ metadata:
     # This is what defines this resource as a hook. Without this line, the
     # job is considered part of the release.
     "helm.sh/hook": pre-upgrade,pre-install
-    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-weight": "-10"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   template:
@@ -19,12 +19,42 @@ spec:
       labels:
         component: upgrade-job
         {{- include "dast.labels" . | nindent 8 }}
+        {{- with .Values.upgradeJob.extraPodLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       restartPolicy: Never
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      serviceAccount: "{{ .Release.Name }}-upgrade-job-sa"
+      initContainers:
+        - name: upgrade-prep-job
+          image: "{{ .Values.images.upgradeJob.repositoryKubectl }}:{{ .Values.images.upgradeJob.tagKubectl | default "latest" }}"
+          imagePullPolicy: {{ .Values.images.upgradeJob.pullPolicyKubectl }}
+          command:
+            - sh
+            - "-c"
+            - |
+              # Exit on any error
+              set -e
+              
+              echo "Upgrade preparation starting..."             
+              kubectl get pods -n {{ .Release.Namespace }}
+              
+              echo "Stopping SC DAST pods..."
+              kubectl scale statefulset.apps -n {{ .Release.Namespace }} \
+                -l  app.kubernetes.io/instance={{ .Release.Name }},stopBeforeUpgrade=1 --replicas=0 || true
+              
+              echo "Waiting for SC DAST pods to terminate..."
+              kubectl wait --for=delete --timeout=90s -n {{ .Release.Namespace }} \
+                -l app.kubernetes.io/instance={{ .Release.Name }},stopBeforeUpgrade=1 pod || true
+              
+              echo "All SC DAST pods should be terminated."
+              kubectl get pods -n {{ .Release.Namespace }}
+              
+              echo "Upgrade preparation complete."
       containers:
         - name: upgrade-job
           image: "{{ .Values.images.upgradeJob.repository }}:{{ .Values.images.upgradeJob.tag | default .Chart.AppVersion }}"

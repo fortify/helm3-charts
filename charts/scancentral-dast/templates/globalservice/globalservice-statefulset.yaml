@@ -31,6 +31,9 @@ spec:
         # This component will be stopped before the upgrade job runs
         stopBeforeUpgrade: "1"
         {{- include "dast.selectorLabels" . | nindent 8 }}
+        {{- with .Values.globalservice.extraPodLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
