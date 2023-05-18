@@ -58,6 +58,8 @@ Make note of the IP address for minikube. All ingresses will be reachable there.
 $ minikube ip
 ```
 
+In this document the IP is going to be **192.168.49.2** .
+
 ### Certificates
 
 You will create a wildcard self-signed certificate for demo purposes and derive a Java Keystore for SSC.
@@ -202,7 +204,7 @@ $ helm repo add fortify https://fortify.github.io/helm3-charts
 ### Install SSC chart
 
 ```commandline
-$ helm install ssc fortify/ssc --version 1.1.2220176 \
+$ helm install ssc fortify/ssc --version \
   --set urlHost=ssc.192-168-49-2.nip.io \
   --set imagePullSecrets[0].name=fortifydocker \
   --set secretRef.name=ssc \
@@ -212,7 +214,7 @@ $ helm install ssc fortify/ssc --version 1.1.2220176 \
   --set secretRef.keys.httpCertificateKeystorePasswordEntry=ssc-service.jks.password \
   --set secretRef.keys.httpCertificateKeyPasswordEntry=ssc-service.jks.key.password \
   --set secretRef.keys.jvmTruststoreFileEntry=truststore \
-  --set secretRef.keys.jmvTruststorePasswordEntry=truststore.password \
+  --set secretRef.keys.jvmTruststorePasswordEntry=truststore.password \
   --set resources=null
 ```
 
@@ -231,12 +233,12 @@ The ingress annotation: `nginx.ingress.kubernetes.io/backend-protocol=HTTPS` ind
 ### Install ScanCentral SAST chart
 
 ```commandline
-$ helm install scancentral-sast fortify/scancentral-sast --version 22.2.0 \
+$ helm install scancentral-sast fortify/scancentral-sast  \
   --set imagePullSecrets[0].name=fortifydocker \
   --set-file fortifyLicense=fortify.license \
+  --set-file trustedCertificates[0]=certificates/certificate.pem \
   --set controller.thisUrl='https://scsast.192-168-49-2.nip.io/scancentral-ctrl' \
   --set controller.sscUrl='https://ssc.192-168-49-2.nip.io' \
-  --set-file controller.trustedCertificates[0]=certificates/certificate.pem \
   --set controller.persistence.enabled=false \
   --set controller.ingress.enabled=true \
   --set controller.ingress.hosts[0].host=scsast.192-168-49-2.nip.io \
@@ -277,9 +279,9 @@ In order to install ScanCentral DAST, SSC must be running. Before you start the 
 - The docker image repository and tag for the config tool with SecureBase. In this example, it is placed in **fortify-docker.svsartifactory.swinfra.net/fortify/dast-config-sb/22.2.0/22.2.0.271-ubi8.6.0:latest** .
 
 ```commandline
-$ helm install scancentral-dast fortify/scancentral-dast --version 22.2.0 --timeout 40m \
+$ helm install scancentral-dast fortify/scancentral-dast --timeout 40m \
   --set imagePullSecrets[0].name=fortifydocker \
-  --set images.upgradeJob.repository=fortify-docker.svsartifactory.swinfra.net/fortify/dast-config-sb/22.2.0/22.2.0.271-ubi8.6.0 \
+  --set images.upgradeJob.repository=myregistry/fortify/dast-config-sb/23.1.0/23.1.0.181-ubi8.6.0 \
   --set images.upgradeJob.tag=latest \
   --set configuration.databaseSettings.databaseProvider=PostgreSQL \
   --set configuration.databaseSettings.server=postgresql \

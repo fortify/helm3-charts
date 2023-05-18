@@ -6,7 +6,7 @@ secretRef:
     httpCertificateKeyPasswordEntry: ssc-service.jks.key.password
     httpCertificateKeystoreFileEntry: ssc-service.jks
     httpCertificateKeystorePasswordEntry: ssc-service.jks.password
-    jmvTruststorePasswordEntry: truststore.password
+    jvmTruststorePasswordEntry: truststore.password
     jvmTruststoreFileEntry: truststore
     sscAutoconfigEntry: ssc.autoconfig
     sscLicenseEntry: fortify.license
