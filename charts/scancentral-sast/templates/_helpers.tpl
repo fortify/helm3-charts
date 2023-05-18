@@ -58,6 +58,10 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- .Values.secrets.secretName | default (include "scancentral-sast.fullname" .) }}
 {{- end }}
 
+{{- define "scancentral-sast-certificates.fullname" -}}
+{{- printf "%s-certificates" (include "scancentral-sast.fullname" .) }}
+{{- end }}
+
 {{- define "secrets.passwords.manage" -}}
 {{- $password := "" }}
 {{- $providedPassword := .providedPassword }}

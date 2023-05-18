@@ -17,6 +17,20 @@ secrets:
   clientAuthToken: ""
   sscScanCentralCtrlSecret: ""
 
+# List of certificates in PEM format to be added to ScanCentral SAST Controller and Workers Trust Store
+# (Tip) Use --set-file
+trustedCertificates: []
+# Example
+#  trustedCertificates:
+#    - |
+#      -----BEGIN CERTIFICATE-----
+#      MIIC8DCCAdigAwIBAgIQPAgGnE3xTYtAaV+K7Ml+oDANBgkqhkiG9w0BAQsFADA0MTIwMAYDVQQD
+#      EylNaWNyb3NvZnQgQXp1cmUgRmVkZXJhdGVkIFNTTyBDZXJ0aWZpY2F0ZTAeFw0yMjAzMDIwOTQ3
+#      (truncated)
+#      3iZZtYAkkw5q9ykrxgD7EWvcuUoeJ25cyu9P0+5fuTMIZ9XCPZdYM2VyZaKlOejJp3hjgJaSNvNW
+#      vT0uvAf8qH+hFT7vOQAJ
+#      -----END CERTIFICATE-----
+
 controller:
   enabled: true
 
@@ -24,19 +38,6 @@ controller:
   # Controller URL. Leave empty for default
   thisUrl: ""
   sscRemoteIp: "0.0.0.0/0"
-
-  # List of certificates in PEM format to be added to ScanCentral SAST Controller Trust Store
-  trustedCertificates: []
-  # Example
-  #  trustedCertificates:
-  #    - |
-  #      -----BEGIN CERTIFICATE-----
-  #      MIIC8DCCAdigAwIBAgIQPAgGnE3xTYtAaV+K7Ml+oDANBgkqhkiG9w0BAQsFADA0MTIwMAYDVQQD
-  #      EylNaWNyb3NvZnQgQXp1cmUgRmVkZXJhdGVkIFNTTyBDZXJ0aWZpY2F0ZTAeFw0yMjAzMDIwOTQ3
-  #      (truncated)
-  #      3iZZtYAkkw5q9ykrxgD7EWvcuUoeJ25cyu9P0+5fuTMIZ9XCPZdYM2VyZaKlOejJp3hjgJaSNvNW
-  #      vT0uvAf8qH+hFT7vOQAJ
-  #      -----END CERTIFICATE-----
 
   image:
     repository: fortifydocker/scancentral-sast-controller
@@ -136,7 +137,7 @@ controller:
 # Allows to configure worker groups with different Kubernetes configurations
 # It is possible to create new worker types by adding entries to this map.
 workers:
-  linux:
+  linux: &defaultWorker
 
     # Allows to enable/disable this component
     enabled: true
@@ -152,8 +153,32 @@ workers:
     # If chart's Controller is disabled this property is required.
     controllerUrl:
 
+    # Assign UUIDs to workers based on the namespace and pod name
+    # Sensors will have the same UUID on restarts even if persistence is disabled
+    uuidDerivedFromPodName: true
+
     # Leave empty for default
     scanTimeout: ""
+    
+    # Leave empty for default
+    workerCleanupAge: ""
+    workerCleanupInterval: ""
+    
+    # Leave empty for default
+    restapiConnectTimeout: ""
+    restapiReadTimeout: ""
+    
+    # Leave empty for default
+    controllerProxyHost: ""
+    controllerProxyPort: ""
+    controllerProxyUser: ""
+    controllerProxyPassword: ""
+    
+    # Leave empty for default
+    sscProxyHost: ""
+    sscProxyPort: ""
+    sscProxyUser: ""
+    sscProxyPassword: ""
 
     autoUpdate:
       # Update Workers' Rulepacks before starting
@@ -236,104 +261,32 @@ workers:
 
     topologySpreadConstraints: []
 
-  windows:
-
-    # Allows to enable/disable this component
-    enabled: false
-
-    # Worker Operating System (linux/windows)
-    os: windows
-
-    # Number of replicas
-    replicas: 1
-
-    # Controller URL. If empty, it will be configured automatically
-    # based on the endpoint of the Controller installed by the chart.
-    # If chart's Controller is disabled this property is required.
-    controllerUrl:
-
-    # Leave empty for default
-    scanTimeout: ""
-
-    autoUpdate:
-      # Update Workers' Rulepacks before starting
-      enabled: true
-      server:
-        # Leave empty for Fortify Update central server
-        url: ""
-        acceptKey: false
-        acceptSslCertificate: false
-      proxy:
-        # FQDN for the proxy. Do not include the protocol (http://). E.g. proxy.mycompany.com
-        host: ""
-        port: ""
-        username: ""
-        password: ""
-
-    image:
-      repository: fortifydocker/scancentral-sast-sensor-windows
-      pullPolicy: IfNotPresent
-      # Overrides the image tag whose default is the chart appVersion.
-      tag: ""
-
-    podAnnotations: {}
-
-    podLabels: {}
-
-    additionalEnvironment: []
-
-    persistence:
-      enabled: false
-      ## @param persistence.storageClass Persistent Volume storage class
-      ## If defined, storageClassName: <storageClass>
-      ## If set to "-", storageClassName: "", which disables dynamic provisioning
-      ## If undefined (the default) or set to null, no storageClassName spec is set, choosing the default provisioner
-      ##
-      storageClass: ""
-      ## @param persistence.accessModes [array] Persistent Volume access modes
-      ##
-      accessModes:
-        - ReadWriteOnce
-      ## @param persistence.accessMode Persistent Volume access mode (DEPRECATED: use `persistence.accessModes` instead)
-      ##
-      accessMode: ReadWriteOnce
-      ## @param persistence.size Persistent Volume size
-      ##
-      size: 10Gi
-      ## @param persistence.selector Selector to match an existing Persistent Volume for WordPress data PVC
-      ## If set, the PVC can't have a PV dynamically provisioned for it
-      ## E.g.
-      ## selector:
-      ##   matchLabels:
-      ##     app: my-app
-      ##
-      selector: {}
-      ## @param persistence.annotations Persistent Volume Claim annotations
-      ##
-      annotations: {}
-
-    resources: {}
-      # We usually recommend not to specify default resources and to leave this as a conscious
-      # choice for the user. This also increases chances charts run on environments with little
-      # resources, such as Minikube. If you do want to specify resources, uncomment the following
-      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-      # limits:
-      #   cpu: 100m
-      #   memory: 128Mi
-      # requests:
-      #   cpu: 100m
-    #   memory: 128Mi
-
-    nodeSelector:
-      kubernetes.io/os: windows
-
-    tolerations:
-      # In case Windows nodes are tainted with windows:NoSchedule
-      - key: "os"
-        operator: "Equal"
-        value: "windows"
-        effect: "NoSchedule"
-
-    affinity: {}
-
-    topologySpreadConstraints: []
+#  windows:
+#    # Merge default worker properties
+#    <<: *defaultWorker
+#    
+#    # Add any override that will be merged with the defaultWorker settings
+#    # This is an example of a  Windows workers and includes fields that are necessary
+#    # like the windows image, nodeSelector and tolerations
+#
+#    # Worker Operating System (linux/windows)
+#    os: windows
+#
+#    # Number of replicas
+#    replicas: 1
+#
+#    image:
+#      repository: fortifydocker/scancentral-sast-sensor-windows
+#      pullPolicy: IfNotPresent
+#      # Overrides the image tag whose default is the chart appVersion.
+#      tag: ""
+#
+#    nodeSelector:
+#      kubernetes.io/os: windows
+#
+#    tolerations:
+#      # In case Windows nodes are tainted with windows:NoSchedule
+#      - key: "os"
+#        operator: "Equal"
+#        value: "windows"
+#        effect: "NoSchedule"
