@@ -77,7 +77,8 @@ spec:
             - name: JVM_TRUSTSTORE_FILE
               value: "/app/secrets/{{ required "The secretRef.keys.jvmTruststoreFileEntry config value is required!" .keys.jvmTruststoreFileEntry | toString | trim }}"
             - name: JVM_TRUSTSTORE_PASSWORD_FILE
-              value: "/app/secrets/{{ required "The secretRef.keys.jmvTruststorePasswordEntry config value is required!" .keys.jmvTruststorePasswordEntry | toString | trim }}"
+              {{- $jvmTruststorePasswordEntry := .keys.jvmTruststorePasswordEntry | default .keys.jmvTruststorePasswordEntry }}{{/* provide backward compatibility */}}
+              value: "/app/secrets/{{ required "The secretRef.keys.jvmTruststorePasswordEntry config value is required!" $jvmTruststorePasswordEntry | toString | trim }}"
             {{- end }}
           {{- end }}
           {{- with .Values.environment }}
@@ -91,10 +92,16 @@ spec:
               mountPath: "/app/secrets"
             - name: persistent-volume
               mountPath: "/fortify"
+            - name: etc-volume
+              mountPath: "/app/etc"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - all
+            readOnlyRootFilesystem: true
       volumes:
         - name: secrets-volume
           secret:
@@ -102,6 +109,10 @@ spec:
         - name: persistent-volume
           persistentVolumeClaim:
             claimName: {{ include "ssc.fullcomponentname" (merge (dict "component" "pvc") . ) }}
+        - name: etc-volume
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -121,7 +132,8 @@ spec:
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
-        # must be kept in sync with image metadata
-        runAsUser: 1111
-        runAsGroup: 0
-        fsGroup: 0
+        # should be kept in sync with image metadata
+        runAsUser: {{ .Values.user.uid }}
+        runAsGroup: {{ .Values.user.gid }}
+        fsGroup: {{ .Values.user.gid }}
+        fsGroupChangePolicy: OnRootMismatch

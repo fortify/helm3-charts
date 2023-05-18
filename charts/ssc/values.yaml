@@ -100,8 +100,8 @@ secretRef:
     # jvmTruststoreFileEntry is a key name for a JVM truststore
     jvmTruststoreFileEntry: ""
 
-    # jmvTruststorePasswordEntry is a key name for a password of the JVM truststore
-    jmvTruststorePasswordEntry: ""
+    # jvmTruststorePasswordEntry is a key name for a password of the JVM truststore
+    jvmTruststorePasswordEntry: ""
 
 
 # persistentVolumeClaim is a set of SSC's persistent volume claim options
@@ -135,6 +135,10 @@ resources:
     cpu: 1
     memory: 7Gi
 
+# user is configuration for user and group IDs to be used for runAsUser, runAsGroup and fsGroup in PodSecurityContext
+user:
+  uid: 1111
+  gid: 0
 
 nodeSelector: {}
 tolerations: []
