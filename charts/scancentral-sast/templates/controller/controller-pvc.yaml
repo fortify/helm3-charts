@@ -5,7 +5,7 @@ metadata:
   name: data-{{ include "scancentral-sast-controller.fullname" . }}
   {{- if or .Values.controller.persistence.annotations }}
   annotations:
-    {{- .Values.controller.persistence.annotations | nindent 4 }}
+    {{- toYaml .Values.controller.persistence.annotations | nindent 4 }}
   {{- end }}
 spec:
   accessModes:
