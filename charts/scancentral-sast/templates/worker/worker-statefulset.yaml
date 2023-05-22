@@ -250,9 +250,9 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: "data"
-        {{- if or $v.persistence.annotations }}
+        {{- if $v.persistence.annotations }}
         annotations:
-        :  {{- $v.persistence.annotations | nindent 4 }}
+        {{- toYaml $v.persistence.annotations | nindent 10 }}
         {{- end }}
       spec:
         accessModes:
