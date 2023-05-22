@@ -22,10 +22,16 @@ spec:
       {{- include "scancentral-sast.selectorLabels" $ | nindent 6 }}
   template:
     metadata:
-      {{- with $v.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}:
-      {{- end }}
+        {{- if $.Values.trustedCertificates }}
+        checksum/trusted-certificates: {{ include (print $.Template.BasePath "/certs-configmap.yaml") $ | sha256sum }}
+        {{- end }}
+        {{- if not $.Values.secrets.secretName }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") $ | sha256sum }}
+        {{- end }}
+        {{- with $v.podAnnotations }}
+          {{- toYaml . | nindent 8 }}:
+        {{- end }}
       labels:
         component: worker
         scancentral-sast.fortify.com/worker-type: {{ $k }}
@@ -69,6 +75,60 @@ spec:
             - name: SCANCENTRAL_SCAN_TIMEOUT
               value: {{ $v.scanTimeout | quote }}
             {{- end }}
+            {{- if $v.workerCleanupAge }}
+            - name: SCANCENTRAL_WORKER_CLEANUP_AGE
+              value: {{ $v.workerCleanupAge | quote }}
+            {{- end }}
+            {{- if $v.workerCleanupInterval }}
+            - name: SCANCENTRAL_WORKER_CLEANUP_INTERVAL
+              value: {{ $v.workerCleanupInterval | quote }}
+            {{- end }}
+            {{- if $v.restapiConnectTimeout }}
+            - name: SCANCENTRAL_RESTAPI_CONNECT_TIMEOUT
+              value: {{ $v.restapiConnectTimeout | quote }}
+            {{- end }}
+            {{- if $v.restapiReadTimeout }}
+            - name: SCANCENTRAL_RESTAPI_READ_TIMEOUT
+              value: {{ $v.restapiReadTimeout | quote }}
+            {{- end }}
+            {{- if $v.controllerProxyHost }}
+            - name: SCANCENTRAL_CTRL_PROXY_HOST
+              value: {{ $v.controllerProxyHost | quote }}
+            {{- end }}
+            {{- if $v.controllerProxyPort }}
+            - name: SCANCENTRAL_CTRL_PROXY_PORT
+              value: {{ $v.controllerProxyPort | quote }}
+            {{- end }}
+            {{- if $v.controllerProxyUser }}
+            - name: SCANCENTRAL_CTRL_PROXY_USER
+              value: {{ $v.controllerProxyUser | quote }}
+            {{- end }}
+            {{- if $v.controllerProxyPassword }}
+            - name: SCANCENTRAL_CTRL_PROXY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scancentral-sast-secret.fullname" $ }}
+                  key: {{ printf "scancentral-worker-ctrl-proxy-password-%s" $k }}
+            {{- end }}
+            {{- if $v.sscProxyHost }}
+            - name: SCANCENTRAL_SSC_PROXY_HOST
+              value: {{ $v.sscProxyHost | quote }}
+            {{- end }}
+            {{- if $v.sscProxyPort }}
+            - name: SCANCENTRAL_SSC_PROXY_PORT
+              value: {{ $v.sscProxyPort | quote }}
+            {{- end }}
+            {{- if $v.sscProxyUser }}
+            - name: SCANCENTRAL_SSC_PROXY_USER
+              value: {{ $v.sscProxyUser | quote }}
+            {{- end }}
+            {{- if $v.sscProxyPassword }}
+            - name: SCANCENTRAL_SSC_PROXY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "scancentral-sast-secret.fullname" $ }}
+                  key: {{ printf "scancentral-worker-ssc-proxy-password-%s" $k }}
+            {{- end }}
             {{- if $v.autoUpdate.enabled }}
             - name: FORTIFY_UPDATE_AUTO
               value: "1"
@@ -104,21 +164,52 @@ spec:
                   name: {{ include "scancentral-sast-secret.fullname" $ }}
                   key: {{ printf "scancentral-auto-update-proxy-password-%s" $k }}
             {{- end }}
+            {{- if $v.trustedCertificates }}
+            - name: SCANCENTRAL_CONFIG_TRUSTED_CERTS_DIR
+            {{- if eq $v.os "linux" }}
+              value: "/trusted-certificates"
+            {{- else }}
+              value: 'C:\trusted-certificates'
+            {{- end }}
+            {{- end }}
+            {{- if $v.uuidDerivedFromPodName }}
+            # Expose namespace
+            - name: K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            # Expose pod name
+            - name: K8S_POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            # Generate UUID based on Namespace and Pod name
+            - name: SCANCENTRAL_WORKER_UUID_FROM_ENV_VARS
+              value: "K8S_NAMESPACE,K8S_POD_NAME"
+            {{- end }}
             {{- with $v.additionalEnvironment }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           volumeMounts:
             {{- if eq $v.os "linux" }}
             - name: "data"
-              mountPath: "/fortify"
+              mountPath: "/fortify/jobs"
             - name: secrets
               mountPath: "/app/sca/fortify.license"
               subPath: "fortify.license"
+            {{- if $.Values.trustedCertificates }}
+            - name: trusted-certificates
+              mountPath: "/trusted-certificates"
+            {{- end }}
             {{- else }}
             - name: "data"
-              mountPath: 'C:\fortify'
+              mountPath: 'C:\fortify\jobs'
             - name: secrets
               mountPath: 'C:\secrets'
+            {{- if $.Values.trustedCertificates }}
+            - name: trusted-certificates
+              mountPath: 'C:\trusted-certificates'
+            {{- end }}
             {{- end }}
           resources:
             {{- toYaml $v.resources | nindent 12 }}
@@ -133,6 +224,11 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        {{- if $.Values.trustedCertificates }}
+        - name: trusted-certificates
+          configMap:
+            name: {{ include "scancentral-sast-certificates.fullname" $ }}
+        {{- end }}
       nodeSelector:
       {{- with $v.nodeSelector }}
         {{- toYaml . | nindent 8 }}

@@ -12,8 +12,11 @@ spec:
   template:
     metadata:
       annotations:
-      {{- if .Values.controller.trustedCertificates }}
-        checksum/trusted-certificates: {{ include (print $.Template.BasePath "/controller/controller-configmap.yaml") . | sha256sum }}
+      {{- if not .Values.secrets.secretName }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      {{- end }}
+      {{- if .Values.trustedCertificates }}
+        checksum/trusted-certificates: {{ include (print $.Template.BasePath "/certs-configmap.yaml") . | sha256sum }}
       {{- end }}
       {{- with .Values.controller.podAnnotations }}
         {{- toYaml . | nindent 8 }}
@@ -74,7 +77,7 @@ spec:
           volumeMounts:
             - name: controller-data
               mountPath: "/fortify"
-            {{- if .Values.controller.trustedCertificates }}
+            {{- if .Values.trustedCertificates }}
             - name: trusted-certificates
               mountPath: "/trusted-certificates"
             {{- end }}
@@ -103,10 +106,10 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
-        {{- if .Values.controller.trustedCertificates }}
+        {{- if .Values.trustedCertificates }}
         - name: trusted-certificates
           configMap:
-            name: {{ include "scancentral-sast-controller.fullname" . }}
+            name: {{ include "scancentral-sast-certificates.fullname" . }}
         {{- end }}
       nodeSelector:
       {{- with .Values.controller.nodeSelector }}

@@ -1,0 +1,12 @@
+{{- if .Values.trustedCertificates }}
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "scancentral-sast-certificates.fullname" . }}
+  labels:
+    {{- include "scancentral-sast.labels" . | nindent 4 }}
+data:
+  {{- range $i, $cert := .Values.trustedCertificates }}
+  {{ printf "trusted-cert-%d.pem" $i }}: {{ $cert | quote }}
+  {{- end }}
+{{- end }}
