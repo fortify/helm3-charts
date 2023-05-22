@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   lim:
   - apiVersion: v2
+    appVersion: 23.1.11
+    created: "2023-05-22T11:43:45.04307736Z"
+    description: A Helm chart for Fortify License and Infrastructure Manager
+    digest: d981996103e6c11794766fbad27449590fee93e76b450b72d2bad5ee8ce0d508
+    name: lim
+    type: application
+    urls:
+    - https://github.com/fortify/helm3-charts/releases/download/lim-23.1.0/lim-23.1.0.tgz
+    version: 23.1.0
+  - apiVersion: v2
     appVersion: 22.2.20
     created: "2023-05-12T12:47:32.779020824Z"
     description: A Helm chart for Fortify License and Infrastructure Manager
@@ -42,6 +52,16 @@ entries:
     - https://github.com/fortify/helm3-charts/releases/download/lim-22.1.0/lim-22.1.0.tgz
     version: 22.1.0
   scancentral-dast:
+  - apiVersion: v2
+    appVersion: 23.1.0
+    created: "2023-05-22T11:43:45.193881539Z"
+    description: A Helm chart for ScanCentral DAST
+    digest: ab8564f5b201d0570abc8983648e02b320bdf4e277096da52b2aea7fa195b222
+    name: scancentral-dast
+    type: application
+    urls:
+    - https://github.com/fortify/helm3-charts/releases/download/scancentral-dast-23.1.0/scancentral-dast-23.1.0.tgz
+    version: 23.1.0
   - apiVersion: v2
     appVersion: "22.2"
     created: "2023-01-24T09:56:59.037606522Z"
@@ -95,6 +115,16 @@ entries:
     version: 22.2.0
   scancentral-sast:
   - apiVersion: v2
+    appVersion: 23.1.0
+    created: "2023-05-22T11:43:45.348314274Z"
+    description: A Helm chart for Fortify ScanCentral SAST
+    digest: f1d3c0c97a0f432ea476b7bc3a9dbe693dd7af8c2b968def3e973de23ce34674
+    name: scancentral-sast
+    type: application
+    urls:
+    - https://github.com/fortify/helm3-charts/releases/download/scancentral-sast-23.1.0/scancentral-sast-23.1.0.tgz
+    version: 23.1.0
+  - apiVersion: v2
     appVersion: 22.2.0
     created: "2023-05-12T12:47:32.93344965Z"
     description: A Helm chart for Fortify ScanCentral SAST
@@ -126,6 +156,15 @@ entries:
     version: 22.1.0
   ssc:
   - apiVersion: v1
+    appVersion: 23.1.0.0148
+    created: "2023-05-22T11:43:45.627571365Z"
+    description: A Helm chart for Fortify Software Security Center application
+    digest: 9ade0e8e51a331fd3080e00a8b91f2251a87ed51fa61fd22f0fa9fc2610a5bf4
+    name: ssc
+    urls:
+    - https://github.com/fortify/helm3-charts/releases/download/ssc-1.1.2310148/ssc-1.1.2310148.tgz
+    version: 1.1.2310148
+  - apiVersion: v1
     appVersion: 22.2.1.0008
     created: "2023-01-19T07:54:06.817633676Z"
     description: A Helm chart for Fortify Software Security Center application
@@ -143,4 +182,4 @@ entries:
     urls:
     - https://github.com/fortify/helm3-charts/releases/download/ssc-1.1.2220176/ssc-1.1.2220176.tgz
     version: 1.1.2220176
-generated: "2023-05-12T12:47:32.93360995Z"
+generated: "2023-05-22T11:43:45.627617369Z"
