@@ -113,7 +113,7 @@ configuration:
     serviceAccountPassword: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
     defaultLimPoolName: username
     defaultLimPoolPassword: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
-    useLimRestApi: false # Allowed values: true, false
+    useLimRestApi: true # Allowed values: true, false
   utilityWorkerServiceSettings:
     rootUrl: http://${SCANCENTRAL_DAST_UTILITYSERVICE_SERVICE}
   dastApiSSLSettings:
