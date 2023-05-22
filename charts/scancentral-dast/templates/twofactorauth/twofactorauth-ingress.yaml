@@ -1,3 +1,4 @@
+{{- if .Values.twofactorauth.enabled }}
 {{- if .Values.ingress.twofactorauth.enabled -}}
 {{- $fullName := include "dast-twofactorauth.fullname" . -}}
 {{- $svcPort := .Values.twofactorauth.service.port -}}
@@ -62,4 +63,5 @@ spec:
               {{- end }}
           {{- end }}
     {{- end }}
+{{- end }}
 {{- end }}

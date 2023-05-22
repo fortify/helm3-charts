@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: "{{ .Release.Name }}-upgrade-prep-job-sa"
+  name: "{{ .Release.Name }}-upgrade-job-sa"
   annotations:
     "helm.sh/hook": pre-upgrade,pre-install
     "helm.sh/hook-weight": "-20"

@@ -1,6 +1,0 @@
-apiVersion: v2
-name: scancentral-dast-windows
-description: A Helm chart for ScanCentral DAST (with Windows containers)
-type: application
-version: "22.2.1"
-appVersion: "22.2"

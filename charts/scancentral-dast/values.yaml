@@ -6,15 +6,15 @@ images:
 
   api:
     repository: fortifydocker/scancentral-dast-api
-    tag: "22.2.ubi.8.6"
+    tag: "23.1.ubi.8"
     pullPolicy: "IfNotPresent"
   globalservice:
     repository: fortifydocker/scancentral-dast-globalservice
-    tag: "22.2.ubi.8.6"
+    tag: "23.1.ubi.8"
     pullPolicy: "IfNotPresent"
   scanner:
     repository: fortifydocker/dast-scanner
-    tag: "22.2.ubi.8.6"
+    tag: "23.1.ubi.8"
     pullPolicy: "IfNotPresent"
   scannerDatastore:
     repository: mcr.microsoft.com/mssql/server
@@ -22,26 +22,26 @@ images:
     pullPolicy: "IfNotPresent"
   utilityservice:
     repository: fortifydocker/dast-scanner
-    tag: "22.2.ubi.8.6"
+    tag: "23.1.ubi.8"
     pullPolicy: "IfNotPresent"
   twofactorauth:
     repository: fortifydocker/fortify-2fa
-    tag: "22.2.ubi.8.6"
+    tag: "23.1.ubi.8"
     pullPolicy: "IfNotPresent"
   wise:
     repository: fortifydocker/wise
-    tag: "22.2.ubi.8.6"
+    tag: "23.1.ubi.8"
     pullPolicy: "IfNotPresent"
   upgradeJob:
     # This image must include the Securebase if DAST needs to be initialized/upgraded.
     # The image without SecureBase can only be used for ScanCentral DAST configuration.
     repository: fortifydocker/scancentral-dast-config
-    tag: "22.2.ubi.8.6"
+    tag: "23.1.ubi.8"
     pullPolicy: "IfNotPresent"
-  upgradePreparationJob:
-    repository: bitnami/kubectl
-    tag: "latest"
-    pullPolicy: "IfNotPresent"
+
+    repositoryKubectl: bitnami/kubectl
+    tagKubectl: "latest"
+    pullPolicyKubectl: "IfNotPresent"
 
 
 # If not provided Helm will create a DAST Secret based on this values file. Refer to secret/secret.yaml template
@@ -155,6 +155,8 @@ configuration:
   applySecureBase: true # Allowed values: true, false
   # secureBasePath is required if applySecureBase =  true
   secureBasePath: /app/DefaultData.zip
+  debrickedSettings:
+    accessToken: # The access token obtained from Debricked.
 
 # Ingress settings
 ingress:
@@ -206,6 +208,8 @@ api:
 
   podAnnotations: {}
 
+  extraPodLabels: {}
+
   podSecurityContext: {}
 
   securityContext: {}
@@ -229,6 +233,8 @@ globalservice:
 
   podAnnotations: {}
 
+  extraPodLabels: {}
+
   podSecurityContext: {}
 
   securityContext: {}
@@ -247,6 +253,8 @@ globalservice:
 utilityservice:
 
   podAnnotations: {}
+
+  extraPodLabels: {}
 
   podSecurityContext: {}
 
@@ -274,6 +282,8 @@ scanner:
   replicas: 1
 
   podAnnotations: {}
+
+  extraPodLabels: {}
 
   podSecurityContext: {}
 
@@ -319,6 +329,8 @@ wise:
 
   podAnnotations: {}
 
+  extraPodLabels: {}
+
   podSecurityContext: {}
 
   securityContext: {}
@@ -344,9 +356,13 @@ wise:
 
 twofactorauth:
 
+  enabled: false
+
   masterToken: "CHANGEMEMasterTokenMinimum36Characters"
 
   podAnnotations: {}
+
+  extraPodLabels: {}
 
   podSecurityContext: {}
 
@@ -367,28 +383,11 @@ twofactorauth:
 
   affinity: {}
 
-upgradePreparationJob:
-
-  podAnnotations: {}
-
-  podSecurityContext: {}
-
-  securityContext: {}
-
-  additionalEnvironment: []
-
-  resources: {}
-
-  nodeSelector:
-    kubernetes.io/os: linux
-
-  tolerations: []
-
-  affinity: {}
-
 upgradeJob:
 
   podAnnotations: {}
+
+  extraPodLabels: {}
 
   podSecurityContext: {}
 
