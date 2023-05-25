@@ -118,7 +118,7 @@ entries:
     appVersion: 23.1.0
     created: "2023-05-22T11:43:45.348314274Z"
     description: A Helm chart for Fortify ScanCentral SAST
-    digest: f1d3c0c97a0f432ea476b7bc3a9dbe693dd7af8c2b968def3e973de23ce34674
+    digest: 03ed94ec36ff0b07de2fbcfe2bc148b82088ba3617e164fe72baeee4f9c4fb88
     name: scancentral-sast
     type: application
     urls:
