@@ -67,7 +67,7 @@ spec:
             - name: SCANCENTRAL_CONFIG_THIS_URL
               value: {{ .Values.controller.thisUrl | quote }}
             {{- end }}
-            {{- if .Values.controller.trustedCertificates }}
+            {{- if .Values.trustedCertificates }}
             - name: SCANCENTRAL_CONFIG_TRUSTED_CERTS_DIR
               value: "/trusted-certificates"
             {{- end }}
