@@ -116,6 +116,16 @@ entries:
   scancentral-sast:
   - apiVersion: v2
     appVersion: 23.1.0
+    created: "2023-07-17T10:01:29.484550074Z"
+    description: A Helm chart for Fortify ScanCentral SAST
+    digest: af349631c466846bc2edce1d8977ff3dd4833e15c65adbf0144708dce982115c
+    name: scancentral-sast
+    type: application
+    urls:
+    - https://github.com/fortify/helm3-charts/releases/download/scancentral-sast-23.1.1/scancentral-sast-23.1.1.tgz
+    version: 23.1.1
+  - apiVersion: v2
+    appVersion: 23.1.0
     created: "2023-05-22T11:43:45.348314274Z"
     description: A Helm chart for Fortify ScanCentral SAST
     digest: 03ed94ec36ff0b07de2fbcfe2bc148b82088ba3617e164fe72baeee4f9c4fb88
@@ -191,4 +201,4 @@ entries:
     urls:
     - https://github.com/fortify/helm3-charts/releases/download/ssc-1.1.2220176/ssc-1.1.2220176.tgz
     version: 1.1.2220176
-generated: "2023-06-01T12:18:09.340493392Z"
+generated: "2023-07-17T10:01:29.484591574Z"
