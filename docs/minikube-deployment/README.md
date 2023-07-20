@@ -204,7 +204,7 @@ $ helm repo add fortify https://fortify.github.io/helm3-charts
 ### Install SSC chart
 
 ```commandline
-$ helm install ssc fortify/ssc --version \
+$ helm install ssc fortify/ssc \
   --set urlHost=ssc.192-168-49-2.nip.io \
   --set imagePullSecrets[0].name=fortifydocker \
   --set secretRef.name=ssc \
