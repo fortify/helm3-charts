@@ -41,6 +41,9 @@ If release name contains chart name it will be used as a full name.
 {{- define "dast-wise.fullname" -}}
 {{- printf "%s-wise" (include "dast.fullname" .) }}
 {{- end }}
+{{- define "dast-fortifyconnectserver.fullname" -}}
+{{- printf "%s-fc-server" (include "dast.fullname" .) }}
+{{- end }}
 
 
 {{/*

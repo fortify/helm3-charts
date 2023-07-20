@@ -6,15 +6,15 @@ images:
 
   api:
     repository: fortifydocker/scancentral-dast-api
-    tag: "23.1.ubi.8"
+    tag: "23.2.ubi.8"
     pullPolicy: "IfNotPresent"
   globalservice:
     repository: fortifydocker/scancentral-dast-globalservice
-    tag: "23.1.ubi.8"
+    tag: "23.2.ubi.8"
     pullPolicy: "IfNotPresent"
   scanner:
     repository: fortifydocker/dast-scanner
-    tag: "23.1.ubi.8"
+    tag: "23.2.ubi.8"
     pullPolicy: "IfNotPresent"
   scannerDatastore:
     repository: mcr.microsoft.com/mssql/server
@@ -22,21 +22,25 @@ images:
     pullPolicy: "IfNotPresent"
   utilityservice:
     repository: fortifydocker/dast-scanner
-    tag: "23.1.ubi.8"
+    tag: "23.2.ubi.8"
     pullPolicy: "IfNotPresent"
   twofactorauth:
     repository: fortifydocker/fortify-2fa
-    tag: "23.1.ubi.8"
+    tag: "23.2.ubi.8"
     pullPolicy: "IfNotPresent"
   wise:
     repository: fortifydocker/wise
-    tag: "23.1.ubi.8"
+    tag: "23.2.ubi.8"
+    pullPolicy: "IfNotPresent"
+  fortifyConnectServer:
+    repository: fortifydocker/scancentral-dast-fortifyconnect
+    tag: "23.2.ubi.8"
     pullPolicy: "IfNotPresent"
   upgradeJob:
     # This image must include the Securebase if DAST needs to be initialized/upgraded.
     # The image without SecureBase can only be used for ScanCentral DAST configuration.
     repository: fortifydocker/scancentral-dast-config
-    tag: "23.1.ubi.8"
+    tag: "23.2.ubi.8"
     pullPolicy: "IfNotPresent"
 
     repositoryKubectl: bitnami/kubectl
@@ -108,7 +112,7 @@ configuration:
       - http://ssc
       - http://${SCANCENTRAL_DAST_API_SERVICE}
   lIMSettings:
-    limUrl: https://lim-server-instance/HP.AppSec.Lim.Services/
+    limUrl: https://lim-server-instance/
     serviceAccountUserName: username
     serviceAccountPassword: password # An encrypted password is recommended. The password can be encrypted using the 'encrypt' command.
     defaultLimPoolName: username
@@ -157,6 +161,19 @@ configuration:
   secureBasePath: /app/DefaultData.zip
   debrickedSettings:
     accessToken: # The access token obtained from Debricked.
+  fortifyConnectServerSettings:
+    disableFortifyConnectServer: true
+    # Internal FortifyConnectServer host. Using this env variable it gets configured automatically.
+    internalHost: ${SCANCENTRAL_DAST_FORTIFYCONNECTSERVER_INTERNAL_SERVICE}
+    # internalPort must match fortifyConnectServer.service.internal.port
+    internalPort: 2022
+    # FortifyConnectServer external host advertised at ScanCentral DAST UI
+    # FortifyConnectClient will connect to this host
+    externalHost: "fortify-connect.scancentral-dast.mydomain.com"
+    externalPort: 2022
+    publicKeyContents: ""
+    privateKeyContents: ""
+
 
 # Ingress settings
 ingress:
@@ -403,3 +420,70 @@ upgradeJob:
   affinity: {}
 
   tolerations: []
+
+
+fortifyConnectServer:
+
+  enabled: false
+
+  # Install the bundled Network Policy
+  # Fortify Connect is based on an SSH Server and uses its port forwarding capabilities. It has 2 operation modes:
+  # - Remote: allows DAST scanners reach the network where Fortify Connect client is running from.
+  # - Local: allows remote scanners to connect to DAST API through the Fortify Connect client.
+  # Although the SSH server has been configured to disallow insecure operations, implementing a Network Policy
+  # on the Fortify Connect server pod is recommended too, specially if localPortForwardingEnabled is true. An
+  # authenticated ssh client could use local port forwarding to send traffic to internal's cluster network from the
+  # Fortify Connect server pod.
+  # The bundled Network Policy blocks all egress if localPortForwardingEnabled is false. If true it will only allow
+  # egress to the internal scancentral-dast-api and DNS queries.
+  # Clusters rarely enforce Network Policies by default. Check these references to enforce network policies:
+  #
+  # On self-hosted clusters, see Calico (https://docs.tigera.io/calico/latest/getting-started/kubernetes/self-managed-onprem/onpremises)
+  # On AWS EKS, see https://docs.aws.amazon.com/eks/latest/userguide/cni-network-policy.html
+  # On Azure AKS, see https://learn.microsoft.com/en-us/azure/aks/use-network-policies
+  # On Google GKE, see https://cloud.google.com/kubernetes-engine/docs/how-to/network-policy
+  networkPolicyEnabled: true
+
+  # Enable Local Port Forwarding on the SSH Server
+  # Set this to true if you plan to use FortifyConnect in Local mode
+  # Local mode allows to use an external scanner and use Fortify Connect client to connect to DAST API.
+  # It is strongly recommended to enable the Network Policy if this is enabled (see networkPolicyEnabled).
+  localPortForwardingEnabled: false
+
+  # Allows to specify a sshd_config template.
+  # See resources/fortifyconnectserver-sshd_config.template
+  sshdConfigTemplate: ""
+
+  # Use container's default sshd_config tempalte or use chart's
+  # Chart's sshd_config template is a more hardened sshd_config
+  # See resources/fortifyconnectserver-sshd_config.template .
+  useDefaultContainerSshdConfigTemplate: false
+
+  podAnnotations: {}
+
+  extraPodLabels: {}
+
+  podSecurityContext: {}
+
+  securityContext: {}
+
+  additionalEnvironment: []
+
+  service:
+    external:
+      type: ClusterIP
+      port: 2022
+      nodePort: ""
+      annotations: {}
+    internal:
+      # ScanCentral DAST API and scanners must connect to Fortify Connect server internally
+      port: 2022
+
+  resources: {}
+
+  nodeSelector:
+    kubernetes.io/os: linux
+
+  tolerations: []
+
+  affinity: {}
