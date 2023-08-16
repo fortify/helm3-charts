@@ -41,7 +41,7 @@ You must obtain the image, including the SecureBase, from other channels.
 ### Minikube start
 
 ```commandline
-$ minikube start
+minikube start
 ```
 
 ### Enable minikube ingress
@@ -49,13 +49,13 @@ $ minikube start
 You will use an ingress to make our applications accessible. Minikube offers a simple method to deploy an NGINX ingress to the system.
 
 ```commandline
-$ minikube addons enable ingress
+minikube addons enable ingress
 ```
 
 Make note of the IP address for minikube. All ingresses will be reachable there.
 
 ```commandline
-$ minikube ip
+minikube ip
 ```
 
 In this document the IP is going to be **192.168.49.2** .
@@ -71,31 +71,31 @@ The certificate will work for all **192-168-49-2.nip.io** subdomains.
 First create a directory named **certificates**. From that directory, run:
 
 ```commandline
-$ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem -subj "/CN=*.192-168-49-2.nip.io"
+openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem -subj "/CN=*.192-168-49-2.nip.io"
 ```
 
 This command generates two files: **certificate.pem** and **key.pem**. Next, create a kubernetes TLS secret to be used by the ingresses:
 
 ```commandline
-$ kubectl create secret tls wildcard-certificate --cert=certificate.pem --key=key.pem
+kubectl create secret tls wildcard-certificate --cert=certificate.pem --key=key.pem
 ```
 
 You will also generate a Java Key Store for SSC. First, generate a PKCS12 keystore with openssl:
 
 ```commandline
-$ openssl pkcs12 -export -name ssc -in certificate.pem -inkey key.pem -out keystore.p12 -password pass:changeme
+openssl pkcs12 -export -name ssc -in certificate.pem -inkey key.pem -out keystore.p12 -password pass:changeme
 ```
 
 And create the keystore (**ssc-service.jks**) for SSC:
 
 ```commandline
-$ keytool -importkeystore -destkeystore ssc-service.jks -srckeystore keystore.p12 -srcstoretype pkcs12 -alias ssc -srcstorepass changeme -deststorepass changeme
+keytool -importkeystore -destkeystore ssc-service.jks -srckeystore keystore.p12 -srcstoretype pkcs12 -alias ssc -srcstorepass changeme -deststorepass changeme
 ```
 
 You will also need a truststore for SSC since it will be accessing ScanCentral Controller at the ingress:
 
 ```commandline
-$ keytool -import -trustcacerts -file certificate.pem -alias "wildcard-cert" -keystore truststore -storepass changeme -noprompt
+keytool -import -trustcacerts -file certificate.pem -alias "wildcard-cert" -keystore truststore -storepass changeme -noprompt
 ```
 
 ### Install MySQL Helm Chart (SSC Database)
@@ -105,13 +105,13 @@ SSC supports MySQL, Oracle and MSSQL databases. You will next install MySQL usin
 Install bitnami repo:
 
 ```commandline
-$ helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
 Return to the directory that contains the values files and use the mysql-values.yaml file provided to install mysql:
 
 ```commandline
-$ helm install mysql bitnami/mysql -f mysql-values.yaml --version 9.3.1
+helm install mysql bitnami/mysql -f mysql-values.yaml --version 9.3.1
 ```
 
 If you check the mysql-values.yaml file, notice that you are creating the SSC database automatically during installation using the recommended settings in SSC. For demo purposes, the credentials specified are:
@@ -126,13 +126,13 @@ ScanCentral DAST supports PostgreSQL and MSSQL. You'll now install PostgreSQL us
 Install bitnami repo (skip if already installed on previous step):
 
 ```commandline
-$ helm repo add bitnami https://charts.bitnami.com/bitnami
+helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
 Use this command to install PostgreSQL:
 
 ```commandline
-$ helm install postgresql bitnami/postgresql --version 11.9.0 \
+helm install postgresql bitnami/postgresql --version 11.9.0 \
   --set auth.postgresPassword=password \
   --set auth.database=scdast_db
 ```
@@ -143,7 +143,7 @@ This installs PostgreSQL and creates a database named **scdast_db** with `postgr
 Most of the Fortify docker images can be found in the private Docker Hub repository **fortifydocker**. To pull these images, you need to create a secret with your Docker Hub credentials and name it **fortifydocker**.
 
 ```commandline
-$ kubectl create secret docker-registry fortifydocker --docker-username <USERNAME> --docker-password <PASSWORD>
+kubectl create secret docker-registry fortifydocker --docker-username <USERNAME> --docker-password <PASSWORD>
 ```
 
 ### Create SSC secret
@@ -182,7 +182,7 @@ In this case, you provide the JDBC connection string to authenticate to the MySQ
 Change from current directory to **ssc-secret** and run:
 
 ```commandline
-$ kubectl create secret generic ssc \
+kubectl create secret generic ssc \
   --from-file=. \
   --from-literal=ssc-service.jks.password=changeme \
   --from-literal=ssc-service.jks.key.password=changeme \
@@ -198,13 +198,13 @@ Next, you parameterize the charts using the helm command (you can use the provid
 ### Add Fortify Helm repository
 
 ```commandline
-$ helm repo add fortify https://fortify.github.io/helm3-charts
+helm repo add fortify https://fortify.github.io/helm3-charts
 ```
 
 ### Install SSC chart
 
 ```commandline
-$ helm install ssc fortify/ssc \
+helm install ssc fortify/ssc \
   --set urlHost=ssc.192-168-49-2.nip.io \
   --set imagePullSecrets[0].name=fortifydocker \
   --set secretRef.name=ssc \
@@ -223,7 +223,7 @@ On the first run, SSC initializes the database. This can take several minutes.
 We must create an ingress for SSC too:
 
 ```commandline
-$ kubectl create ingress ssc-ingress \
+kubectl create ingress ssc-ingress \
   --rule='ssc.192-168-49-2.nip.io/*=ssc-service:443,tls=wildcard-certificate' \
   --annotation nginx.ingress.kubernetes.io/backend-protocol=HTTPS
 ```
@@ -233,7 +233,7 @@ The ingress annotation: `nginx.ingress.kubernetes.io/backend-protocol=HTTPS` ind
 ### Install ScanCentral SAST chart
 
 ```commandline
-$ helm install scancentral-sast fortify/scancentral-sast  \
+helm install scancentral-sast fortify/scancentral-sast  \
   --set imagePullSecrets[0].name=fortifydocker \
   --set-file fortifyLicense=fortify.license \
   --set-file trustedCertificates[0]=certificates/certificate.pem \
@@ -252,7 +252,7 @@ This will output notes to retrieve auto-generated secrets such as the key shared
 Use the following command to retrieve the **SSC and ScanCentral Controller shared secret**:
 
 ```commandline
-$ kubectl get secret scancentral-sast -o jsonpath="{.data.scancentral-ssc-scancentral-ctrl-secret}" | base64 -d
+kubectl get secret scancentral-sast -o jsonpath="{.data.scancentral-ssc-scancentral-ctrl-secret}" | base64 -d
 ```
 
 ### SSC and ScanCentral SAST Configuration
@@ -265,7 +265,7 @@ Select `Administration > Configuration > ScanCentral SAST`, and then select Enab
 After you save the configuration, run the following to restart the SSC pod:
 
 ```commandline
-$ kubectl delete pod ssc-webapp-0
+kubectl delete pod ssc-webapp-0
 ```
 This deletes the pod and initiates a new one immediately. You should now see the ScanCentral SAST section in SSC.
 
@@ -279,7 +279,7 @@ In order to install ScanCentral DAST, SSC must be running. Before you start the 
 - The docker image repository and tag for the config tool with SecureBase. In this example, it is placed in **fortify-docker.svsartifactory.swinfra.net/fortify/dast-config-sb/22.2.0/22.2.0.271-ubi8.6.0:latest** .
 
 ```commandline
-$ helm install scancentral-dast fortify/scancentral-dast --timeout 40m \
+helm install scancentral-dast fortify/scancentral-dast --timeout 40m \
   --set imagePullSecrets[0].name=fortifydocker \
   --set images.upgradeJob.repository=myregistry/fortify/dast-config-sb/23.1.0/23.1.0.181-ubi8.6.0 \
   --set images.upgradeJob.tag=latest \
