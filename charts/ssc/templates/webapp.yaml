@@ -21,6 +21,9 @@ spec:
     metadata:
       labels:
         {{- include "ssc.selector" $context | nindent 8 }}
+    {{- with .Values.webapp.annotations }}
+      annotations:
+      {{- include .Values.webapp.annotations | nindent 4 }}
     spec:
       containers:
         - name: webapp
