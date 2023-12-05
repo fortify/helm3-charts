@@ -24,6 +24,7 @@ spec:
     {{- with .Values.webapp.annotations }}
       annotations:
       {{- include .Values.webapp.annotations | nindent 4 }}
+    {{- end }}
     spec:
       containers:
         - name: webapp
