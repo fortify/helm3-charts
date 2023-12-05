@@ -23,7 +23,7 @@ spec:
         {{- include "ssc.selector" $context | nindent 8 }}
     {{- with .Values.webapp.annotations }}
       annotations:
-      {{- include .Values.webapp.annotations | nindent 4 }}
+        {{- toYaml . | nindent 8 -}}
     {{- end }}
     spec:
       containers:
