@@ -35,16 +35,6 @@ spec:
             - name: https-web
               containerPort: 8443
               protocol: TCP
-          readinessProbe:
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            httpGet:
-              path: "{{ $urlPathPrefix }}/images/favicon.ico"
-              port: https-web
-              scheme: HTTPS
-              httpHeaders:
-                - name: Host
-                  value: {{ $urlAuthority }}
           env:
             - name: SSC_AUTOCONFIG_HOST_URL
               value: "{{ printf "https://%s%s" $urlAuthority $urlPathPrefix }}"
