@@ -99,11 +99,11 @@ spec:
             {{- toYaml . | nindent 12 }}
             {{- end }}
           volumeMounts:
-            - name: lim-database
+            - name: database
               mountPath: "/app/database"
-            - name: lim-logs
+            - name: logs
               mountPath: "/app/logs"
-            - name: lim-certificates
+            - name: certificates
               mountPath: "/app/certificates"
             {{- if .Values.serverCertificate.enabled }}
             - name: lim-server-certificate
@@ -151,25 +151,25 @@ spec:
               - key: lim-signing-certificate
                 path: signing-certificate.pfx
         {{- end }}
-        - name: lim-certificates
-        {{- if .Values.persistence.certificates.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.persistence.certificates.existingClaim | default (printf "%s-certificates" (include "lim.fullname" .)) | quote }}
-        {{- else }}
+        {{- if and .Values.persistence.certificates.enabled .Values.persistence.certificates.existingClaim }}
+        - name: certificates
+          persistentVolumeClaim: {{ .Values.persistence.certificates.existingClaim }}
+        {{- else if not .Values.persistence.certificates.enabled }}
+        - name: certificates
           emptyDir: {}
         {{- end }}
-        - name: lim-database
-        {{- if .Values.persistence.database.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.persistence.database.existingClaim | default (printf "%s-database" (include "lim.fullname" .)) }}
-        {{- else }}
+        {{- if and .Values.persistence.database.enabled .Values.persistence.database.existingClaim }}
+        - name: database
+          persistentVolumeClaim: {{ .Values.persistence.database.existingClaim }}
+        {{- else if not .Values.persistence.database.enabled }}
+        - name: database
           emptyDir: {}
         {{- end }}
-        - name: lim-logs
-        {{- if .Values.persistence.logs.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.persistence.logs.existingClaim | default (printf "%s-logs" (include "lim.fullname" .)) }}
-        {{- else }}
+        {{- if and .Values.persistence.logs.enabled .Values.persistence.logs.existingClaim }}
+        - name: logs
+          persistentVolumeClaim: {{ .Values.persistence.logs.existingClaim }}
+        {{- else if not .Values.persistence.logs.enabled }}
+        - name: logs
           emptyDir: {}
         {{- end }}
       nodeSelector:
@@ -184,3 +184,69 @@ spec:
       {{- with .Values.tolerations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  {{- if or .Values.persistence.database.enabled .Values.persistence.certificates.enabled .Values.persistence.logs.enabled }}
+  volumeClaimTemplates:
+    {{- if and .Values.persistence.database.enabled (not .Values.persistence.database.existingClaim) }}
+    - metadata:
+        name: "database"
+        {{- if .Values.persistence.database.annotations }}
+        annotations:
+        {{- toYaml .Values.persistence.database.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+        {{- if not (empty .Values.persistence.database.accessModes) }}
+        {{- range .Values.persistence.database.accessModes }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- else }}
+        - {{ .Values.persistence.database.accessMode | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.database.size | quote }}
+        storageClassName: {{ .Values.persistence.database.storageClass }}
+  {{- end }}
+  {{- if and .Values.persistence.certificates.enabled (not .Values.persistence.certificates.existingClaim) }}
+    - metadata:
+        name: "certificates"
+        {{- if .Values.persistence.certificates.annotations }}
+        annotations:
+        {{- toYaml .Values.persistence.certificates.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+        {{- if not (empty .Values.persistence.certificates.accessModes) }}
+        {{- range .Values.persistence.certificates.accessModes }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- else }}
+        - {{ .Values.persistence.certificates.accessMode | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.certificates.size | quote }}
+        storageClassName: {{ .Values.persistence.certificates.storageClass }}
+  {{- end }}
+  {{- if and .Values.persistence.logs.enabled (not .Values.persistence.logs.existingClaim) }}
+    - metadata:
+        name: "logs"
+        {{- if .Values.persistence.logs.annotations }}
+        annotations:
+        {{- toYaml .Values.persistence.logs.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+        {{- if not (empty .Values.persistence.logs.accessModes) }}
+        {{- range .Values.persistence.logs.accessModes }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- else }}
+        - {{ .Values.persistence.logs.accessMode | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.logs.size | quote }}
+        storageClassName: {{ .Values.persistence.logs.storageClass }}
+  {{- end }}
+  {{- end }}

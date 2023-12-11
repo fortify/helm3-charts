@@ -97,7 +97,7 @@ ingress:
 
 persistence:
   database:
-    enabled: false
+    enabled: true
     ## A manually managed Persistent Volume and Claim
     ## Requires persistence.enabled: true
     ## If defined, PVC must be created manually before volume will be bound
@@ -112,9 +112,9 @@ persistence:
     annotations: {}
     labels: {}
     accessMode: "ReadWriteOnce"
-    size: "100Mi"
+    size: "1Gi"
   certificates:
-    enabled: false
+    enabled: true
     ## A manually managed Persistent Volume and Claim
     ## Requires persistence.enabled: true
     ## If defined, PVC must be created manually before volume will be bound

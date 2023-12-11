@@ -284,9 +284,6 @@ helm install lim fortify/lim \
   --set ingress.tls[0].hosts[0]=lim.192-168-49-2.nip.io
 ```
 
-Bear in mind that this is a demo environment. Check persistence section at Helm values file to persiste license database and signing certificate.
-If persistence is not enabled release your licenses before you shut down LIM, otherwise they'll get blocked.
-
 The helm chart auto-generates the admin password. Check the helm installation Notes for information on how to retrieve it.
 
 ### LIM configuration
