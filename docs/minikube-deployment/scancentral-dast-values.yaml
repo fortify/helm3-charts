@@ -25,6 +25,7 @@ configuration:
     corsOrigins:
       - https://ssc.192-168-49-2.nip.io
   lIMSettings:
+    limUrl: http://lim/
     serviceAccountUserName: admin
     serviceAccountPassword: Toughpass1!
     defaultLimPoolName: sensors
