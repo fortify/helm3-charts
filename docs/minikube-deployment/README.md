@@ -269,19 +269,43 @@ kubectl delete pod ssc-webapp-0
 ```
 This deletes the pod and initiates a new one immediately. You should now see the ScanCentral SAST section in SSC.
 
+### Install LIM chart
+
+Scancentral DAST needs a LIM server to work. In order to install it:
+
+```commandline
+helm install lim fortify/lim \
+  --set imagePullSecrets[0].name=fortifydocker \
+  --set ingress.enabled=true \
+  --set ingress.hosts[0].host=lim.192-168-49-2.nip.io \
+  --set ingress.hosts[0].paths[0].path=/ \
+  --set ingress.hosts[0].paths[0].pathType=Prefix \
+  --set ingress.tls[0].secretName=wildcard-certificate \
+  --set ingress.tls[0].hosts[0]=lim.192-168-49-2.nip.io
+```
+
+Bear in mind that this is a demo environment. Check persistence section at Helm values file to persiste license database and signing certificate.
+If persistence is not enabled release your licenses before you shut down LIM, otherwise they'll get blocked.
+
+The helm chart auto-generates the admin password. Check the helm installation Notes for information on how to retrieve it.
+
+### LIM configuration
+
+Access LIM at https://lim.192-168-49-2.nip.io . Install your DAST and DAST Sensor licenses. After that create a License pool for Scancentral DAST sensors.
+Take note of the pool name and password.
+
 ### Install ScanCentral DAST chart
 
 In order to install ScanCentral DAST, SSC must be running. Before you start the installation, collect the following information:
 
 - SSC URL and credentials.
-- LIM API URL and credentials **(The LIM Service URL does not work on with Linux sensors. You must use the LIM API URL)**.
-- WebInspect license pool name and password.
+- Make sure that your LIM server is installed and configured with the licenses above.
 - The docker image repository and tag for the config tool with SecureBase. In this example, it is placed in **fortify-docker.svsartifactory.swinfra.net/fortify/dast-config-sb/22.2.0/22.2.0.271-ubi8.6.0:latest** .
 
 ```commandline
 helm install scancentral-dast fortify/scancentral-dast --timeout 40m \
   --set imagePullSecrets[0].name=fortifydocker \
-  --set images.upgradeJob.repository=myregistry/fortify/dast-config-sb/23.1.0/23.1.0.181-ubi8.6.0 \
+  --set images.upgradeJob.repository=myregistry/fortify/dast-config-sb/23.2.0/23.2.0.107-ubi8 \
   --set images.upgradeJob.tag=latest \
   --set configuration.databaseSettings.databaseProvider=PostgreSQL \
   --set configuration.databaseSettings.server=postgresql \
@@ -296,7 +320,7 @@ helm install scancentral-dast fortify/scancentral-dast --timeout 40m \
   --set configuration.sSCSettings.serviceAccountPassword=<SSC_ADMIN_PASSWORD> \
   --set configuration.dASTApiSettings.corsOrigins[0]=https://ssc.192-168-49-2.nip.io \
   --set configuration.dASTApiSettings.corsOrigins[1]=https://scdastapi.192-168-49-2.nip.io \
-  --set configuration.lIMSettings.limUrl=<LIM_API_URL> \
+  --set configuration.lIMSettings.limUrl=http://lim/ \
   --set configuration.lIMSettings.serviceAccountUserName=<LIM_ADMIN_USER> \
   --set configuration.lIMSettings.serviceAccountPassword=<LIM_ADMIN_PASSWORD> \
   --set configuration.lIMSettings.defaultLimPoolName=<LIM_POOL_NAME> \
