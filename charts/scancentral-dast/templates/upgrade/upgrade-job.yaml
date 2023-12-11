@@ -72,6 +72,8 @@ spec:
               value: {{ include "dast-api.fullname" . }}
             - name: SCANCENTRAL_DAST_UTILITYSERVICE_SERVICE
               value: {{ include "dast-utilityservice.fullname" . }}
+            - name: SCANCENTRAL_DAST_FORTIFYCONNECTSERVER_INTERNAL_SERVICE
+              value: {{ include "dast-fortifyconnectserver.fullname" . }}-internal
             {{- with .Values.upgradeJob.additionalEnvironment }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

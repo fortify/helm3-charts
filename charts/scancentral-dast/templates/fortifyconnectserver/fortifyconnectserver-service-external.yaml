@@ -1,0 +1,28 @@
+{{- if .Values.fortifyConnectServer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dast-fortifyconnectserver.fullname" . }}
+  labels:
+    component: fortifyconnectserver
+    {{- include "dast.labels" . | nindent 4 }}
+  {{- with .Values.fortifyConnectServer.service.external.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.fortifyConnectServer.service.external.type }}
+  ports:
+    - port: {{ .Values.fortifyConnectServer.service.external.port }}
+      {{- if (or (eq .Values.fortifyConnectServer.service.external.type "NodePort") (eq .Values.fortifyConnectServer.service.external.type "LoadBalancer")) }}
+      nodePort: {{ .Values.fortifyConnectServer.service.external.nodePort }}
+      {{- else if eq .Values.fortifyConnectServer.service.external.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+      targetPort: ssh
+      protocol: TCP
+      name: ssh
+  selector:
+    component: fortifyconnectserver
+    {{- include "dast.selectorLabels" . | nindent 4 }}
+{{- end }}

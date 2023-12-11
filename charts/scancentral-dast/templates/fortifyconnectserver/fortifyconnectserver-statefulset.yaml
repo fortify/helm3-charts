@@ -1,0 +1,77 @@
+{{- if .Values.fortifyConnectServer.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "dast-fortifyconnectserver.fullname" . }}
+  labels:
+    component: fortifyconnectserver
+    {{- include "dast.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  serviceName: {{ include "dast-fortifyconnectserver.fullname" . }}
+  selector:
+    matchLabels:
+      component: fortifyconnectserver
+      {{- include "dast.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # This annotation makes sure that the pod is restarted on any upgrade
+        rollme: {{ randAlphaNum 5 | quote }}
+        {{- if .Values.podAnnotations }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
+        {{- end }}
+        {{- if .Values.fortifyConnectServer.podAnnotations }}
+        {{- toYaml .Values.fortifyConnectServer.podAnnotations | nindent 8 }}
+        {{- end }}
+      labels:
+        component: fortifyconnectserver
+        {{- include "dast.selectorLabels" . | nindent 8 }}
+        {{- with .Values.fortifyConnectServer.extraPodLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.fortifyConnectServer.podSecurityContext | nindent 8 }}
+      containers:
+        - name: fortifyconnectserver
+          securityContext:
+            {{- toYaml .Values.fortifyConnectServer.securityContext | nindent 12 }}
+          image: "{{ .Values.images.fortifyConnectServer.repository }}:{{ .Values.images.fortifyConnectServer.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.fortifyConnectServer.pullPolicy }}
+          env:
+            - name: Port
+              value: "2022"
+            - name: PublicKeyContents
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "secret.name" . }}
+                  key: fortify-connect-public-key-contents
+            - name: SshdConfigTemplate
+              value: {{ .Values.fortifyConnectServer.sshdConfigTemplate | default (tpl (.Files.Get "resources/fortifyconnectserver-sshd_config.template") .) | b64enc | quote }}
+            {{- with .Values.fortifyConnectServer.additionalEnvironment }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - name: ssh
+              containerPort: 2022
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.fortifyConnectServer.resources | nindent 12 }}
+      nodeSelector:
+      {{- with .Values.fortifyConnectServer.nodeSelector }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.fortifyConnectServer.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      tolerations:
+      {{- with .Values.fortifyConnectServer.tolerations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
