@@ -2,5 +2,5 @@ apiVersion: v2
 name: lim
 description: A Helm chart for Fortify License and Infrastructure Manager
 type: application
-version: 23.1.0
-appVersion: 23.1.11
+version: 23.2.0
+appVersion: 23.2.0

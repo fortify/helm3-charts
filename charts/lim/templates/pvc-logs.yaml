@@ -1,0 +1,28 @@
+{{- if and .Values.persistence.logs.enabled (not .Values.persistence.logs.existingClaim) -}}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+{{- if .Values.persistence.logs.annotations }}
+  annotations:
+{{ toYaml .Values.persistence.logs.annotations | indent 4 }}
+{{- end }}
+  name: {{ template "lim.fullname" . }}-logs
+  labels:
+    {{- include "lim.labels" . | nindent 4 }}
+    {{- if .Values.persistence.logs.labels }}
+    {{ toYaml .Values.persistence.logs.labels | indent 4 }}
+    {{- end }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.logs.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.logs.size | quote }}
+{{- if .Values.persistence.logs.storageClass }}
+{{- if (eq "-" .Values.persistence.logs.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ .Values.persistence.logs.storageClass }}"
+{{- end }}
+{{- end }}
+{{- end }}

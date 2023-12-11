@@ -2,15 +2,45 @@
 # If not empty, the existing secret referenced by "secretName" will be used to provide the sensitive properties
 secretName: ""
 
-adminWebSiteName: "LIM.Admin"
-serviceWebSiteName: "LIM.Service"
-apiSiteName: "LIM.API"
-adminUsername: "admin"
-# The following secret will be auto-generated if left blank. Check the NOTES after running
-# helm install for instructions to retrieve the auto-generated secret.
-adminPassword: ""
-adminEmail: "test@example.com"
-adminFriendlyName: "admin"
+defaultAdministrator:
+  login: "admin"
+  # The following secret will be auto-generated if left blank. Check the NOTES after running
+  # helm install for instructions to retrieve the auto-generated secret.
+  password: ""
+  email: "test@example.com"
+  fullName: "Administrator"
+
+jwt:
+  # The following secret will be auto-generated if left blank. Check the NOTES after running
+  # helm install for instructions to retrieve the auto-generated secret.
+  securityKey: ""
+  validAudience: "FortifyLimAuthAudience"
+  validIssuer: "FortifyLimAuthIssuer"
+  expirationMinutes: 5 # minutes
+  refreshTokenExpirationMinutes: 60 # minutes
+
+serverCertificate:
+  # If enabled, make sure you provide the certificate on this section or on the defined secret at "secretName"
+  enabled: false
+  certificateBase64: "" # Encoded in Base64
+  certificatePassword: ""
+
+signingCertificate:
+  # If autoGenerate is false, make sure you provide the certificate on this section or on the defined secret at "secretName"
+  autoGenerate: true
+  certificateBase64: "" # Encoded in Base64
+  certificatePassword: ""
+
+fortifyLicensingUrl: "https://licenseservice.fortify.microfocus.com/"
+allowNonTrustedServerCertificate: false
+
+proxy:
+  mode: 0 # Optional - if not included, 0. Values can be: None=0, AutoDetect=1, Manual=2
+  address: ""
+  port: ""
+  userName: ""
+  password: ""
+
 
 imagePullSecrets: []
 
@@ -18,7 +48,7 @@ image:
   repository: fortifydocker/lim
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "23.2.ubi.8"
 
 nameOverride: ""
 fullnameOverride: ""
@@ -47,6 +77,7 @@ additionalEnvironment: []
 service:
   type: ClusterIP
   port: 80
+  portTls: 443
 
 ingress:
   enabled: false
@@ -65,22 +96,57 @@ ingress:
   #      - chart-example.local
 
 persistence:
-  enabled: false
-  ## A manually managed Persistent Volume and Claim
-  ## Requires persistence.enabled: true
-  ## If defined, PVC must be created manually before volume will be bound
-  existingClaim:
-  ## LIM data Persistent Volume Storage Class
-  ## If defined, storageClassName: <storageClass>
-  ## If set to "-", storageClassName: "", which disables dynamic provisioning
-  ## If undefined (the default) or set to null, no storageClassName spec is
-  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
-  ##   GKE, AWS & OpenStack).
-  storageClass: ""
-  annotations: {}
-  labels: {}
-  accessMode: "ReadWriteOnce"
-  size: "100Mi"
+  database:
+    enabled: false
+    ## A manually managed Persistent Volume and Claim
+    ## Requires persistence.enabled: true
+    ## If defined, PVC must be created manually before volume will be bound
+    existingClaim:
+    ## LIM data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack).
+    storageClass: ""
+    annotations: {}
+    labels: {}
+    accessMode: "ReadWriteOnce"
+    size: "100Mi"
+  certificates:
+    enabled: false
+    ## A manually managed Persistent Volume and Claim
+    ## Requires persistence.enabled: true
+    ## If defined, PVC must be created manually before volume will be bound
+    existingClaim:
+    ## LIM data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack).
+    storageClass: ""
+    annotations: {}
+    labels: {}
+    accessMode: "ReadWriteOnce"
+    size: "100Mi"
+  logs:
+    enabled: false
+    ## A manually managed Persistent Volume and Claim
+    ## Requires persistence.enabled: true
+    ## If defined, PVC must be created manually before volume will be bound
+    existingClaim:
+    ## LIM data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack).
+    storageClass: ""
+    annotations: {}
+    labels: {}
+    accessMode: "ReadWriteOnce"
+    size: "100Mi"
 
 
 resources: {}
@@ -97,14 +163,9 @@ resources: {}
 
 
 nodeSelector:
-  kubernetes.io/os: windows
+  kubernetes.io/os: linux
 
-tolerations:
-  # In case Windows nodes are tainted with windows:NoShedule
-  - key: "os"
-    operator: "Equal"
-    value: "windows"
-    effect: "NoSchedule"
+tolerations: []
 
 affinity: {}
 

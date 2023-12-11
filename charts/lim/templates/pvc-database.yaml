@@ -1,0 +1,28 @@
+{{- if and .Values.persistence.database.enabled (not .Values.persistence.database.existingClaim) -}}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+{{- if .Values.persistence.database.annotations }}
+  annotations:
+{{ toYaml .Values.persistence.database.annotations | indent 4 }}
+{{- end }}
+  name: {{ template "lim.fullname" . }}-database
+  labels:
+    {{- include "lim.labels" . | nindent 4 }}
+    {{- if .Values.persistence.database.labels }}
+    {{ toYaml .Values.persistence.database.labels | indent 4 }}
+    {{- end }}
+spec:
+  accessModes:
+    - {{ .Values.persistence.database.accessMode | quote }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.database.size | quote }}
+{{- if .Values.persistence.database.storageClass }}
+{{- if (eq "-" .Values.persistence.database.storageClass) }}
+  storageClassName: ""
+{{- else }}
+  storageClassName: "{{ .Values.persistence.database.storageClass }}"
+{{- end }}
+{{- end }}
+{{- end }}
