@@ -88,6 +88,14 @@ spec:
               mountPath: "/fortify"
             - name: etc-volume
               mountPath: "/app/etc"
+          readinessProbe:
+            httpGet:
+              path: /images/favicon.ico
+              port: https-web
+              scheme: HTTPS
+              httpHeaders:
+                - name: Host
+                  value: localhost:8443
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
