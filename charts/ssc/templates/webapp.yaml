@@ -91,11 +91,11 @@ spec:
           readinessProbe:
             httpGet:
               path: /images/favicon.ico
-              port: https-web
-              scheme: HTTPS
+              port: http-web
+              scheme: HTTP
               httpHeaders:
                 - name: Host
-                  value: localhost:8443
+                  value: localhost:8080
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
