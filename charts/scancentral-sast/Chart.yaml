@@ -2,5 +2,5 @@ apiVersion: v2
 name: scancentral-sast
 description: A Helm chart for Fortify ScanCentral SAST
 type: application
-version: 23.1.1
+version: 23.1.2
 appVersion: 23.1.0
