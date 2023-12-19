@@ -235,7 +235,7 @@ The ingress annotation: `nginx.ingress.kubernetes.io/backend-protocol=HTTPS` ind
 ```commandline
 helm install scancentral-sast fortify/scancentral-sast  \
   --set imagePullSecrets[0].name=fortifydocker \
-  --set-file fortifyLicense=fortify.license \
+  --set-file secrets.fortifyLicense=fortify.license \
   --set-file trustedCertificates[0]=certificates/certificate.pem \
   --set controller.thisUrl='https://scsast.192-168-49-2.nip.io/scancentral-ctrl' \
   --set controller.sscUrl='https://ssc.192-168-49-2.nip.io' \

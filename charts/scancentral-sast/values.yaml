@@ -7,7 +7,7 @@ secrets:
   # in this section will be ignored
   secretName: ""
 
-  # (Required if secrets.secretName is blank) fortify.license file contents. (Tip) Use "--set-file=fortifyLicense=<FORTIFY_LICENSE_PATH>" argument
+  # (Required if secrets.secretName is blank) fortify.license file contents. (Tip) Use "--set-file=secrets.fortifyLicense=<FORTIFY_LICENSE_PATH>" argument
   # when running helm install or upgrade.
   fortifyLicense: ""
 
