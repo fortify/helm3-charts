@@ -46,25 +46,6 @@ spec:
       securityContext:
         {{- toYaml .Values.scanner.podSecurityContext | nindent 8 }}
       containers:
-        - name: datastore
-          image: "{{ .Values.images.scannerDatastore.repository }}:{{ .Values.images.scannerDatastore.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.images.scannerDatastore.pullPolicy }}
-          volumeMounts:
-            - name: scandata
-              mountPath: /etc/wi/.widata/user/ScanData
-          env:
-            - name: MSSQL_IP_ADDRESS
-              value: 127.0.0.1
-            - name: ACCEPT_EULA
-              value: "Y"
-            - name: MSSQL_PID
-              value: "Express"
-            - name: SA_PASSWORD
-              # Hardcoded password as it is a local datastore
-              value: Str0ngP@ssw0rd?
-        - name: wise
-          image: "{{ .Values.images.wise.repository }}:{{ .Values.images.wise.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.images.wise.pullPolicy }}
         - name: scanner
           securityContext:
             {{- toYaml .Values.scanner.securityContext | nindent 12 }}
@@ -114,6 +95,25 @@ spec:
               protocol: TCP
           resources:
             {{- toYaml .Values.scanner.resources | nindent 12 }}
+        - name: datastore
+          image: "{{ .Values.images.scannerDatastore.repository }}:{{ .Values.images.scannerDatastore.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.scannerDatastore.pullPolicy }}
+          volumeMounts:
+            - name: scandata
+              mountPath: /etc/wi/.widata/user/ScanData
+          env:
+            - name: MSSQL_IP_ADDRESS
+              value: 127.0.0.1
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_PID
+              value: "Express"
+            - name: SA_PASSWORD
+              # Hardcoded password as it is a local datastore
+              value: Str0ngP@ssw0rd?
+        - name: wise
+          image: "{{ .Values.images.wise.repository }}:{{ .Values.images.wise.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.images.wise.pullPolicy }}
       volumes:
         - name: scandata
           emptyDir: {}

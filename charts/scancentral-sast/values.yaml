@@ -7,7 +7,7 @@ secrets:
   # in this section will be ignored
   secretName: ""
 
-  # (Required if secrets.secretName is blank) fortify.license file contents. (Tip) Use "--set-file=fortifyLicense=<FORTIFY_LICENSE_PATH>" argument
+  # (Required if secrets.secretName is blank) fortify.license file contents. (Tip) Use "--set-file=secrets.fortifyLicense=<FORTIFY_LICENSE_PATH>" argument
   # when running helm install or upgrade.
   fortifyLicense: ""
 
@@ -43,7 +43,7 @@ controller:
     repository: fortifydocker/scancentral-sast-controller
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: ""
+    tag: "23.2.1"
 
   service:
     # Define service for ScanCentral Controller
@@ -199,7 +199,7 @@ workers:
       repository: fortifydocker/scancentral-sast-sensor
       pullPolicy: IfNotPresent
       # Overrides the image tag whose default is the chart appVersion.
-      tag: ""
+      tag: "23.2.0"
 
     podAnnotations: {}
 
@@ -279,7 +279,7 @@ workers:
 #      repository: fortifydocker/scancentral-sast-sensor-windows
 #      pullPolicy: IfNotPresent
 #      # Overrides the image tag whose default is the chart appVersion.
-#      tag: ""
+#      tag: "23.2.0"
 #
 #    nodeSelector:
 #      kubernetes.io/os: windows

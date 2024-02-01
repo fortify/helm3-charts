@@ -1,0 +1,21 @@
+{{- if .Values.fortifyConnectServer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "dast-fortifyconnectserver.fullname" . }}-internal
+  labels:
+    component: fortifyconnectserver
+    {{- include "dast.labels" . | nindent 4 }}
+spec:
+  # Internal service must be headless and ClusterIP because ScanCentral DAST uses arbitrary ports from the Fortify Connect Server pod.
+  clusterIP: None
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.fortifyConnectServer.service.internal.port }}
+      targetPort: ssh
+      protocol: TCP
+      name: ssh
+  selector:
+    component: fortifyconnectserver
+    {{- include "dast.selectorLabels" . | nindent 4 }}
+{{- end }}

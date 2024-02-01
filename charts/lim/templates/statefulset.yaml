@@ -25,77 +25,151 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      # LIM uses SQL Express which runs as NT SERVICE\MSSQL$SQLEXPRESS .
-      # That user cannot write on a mounted volume. This initContainer grants permissions
-      # to that user.
-      initContainers:
-        - name: fix-lim-dir-ownership
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command:
-            - powershell.exe
-            - |
-              mkdir C:\lim -Force | Out-Null;
-              icacls.exe 'C:\lim' /grant 'NT SERVICE\MSSQL$SQLEXPRESS:F'
-          volumeMounts:
-          - name: lim-data
-            mountPath: 'C:\lim'
       containers:
-        - name: {{ .Chart.Name }}
+        - name: lim
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: LimUseSSL
-              value: "false"
-            - name: LimAdminWebSiteName
-              value: {{ .Values.adminWebSiteName | quote }}
-            - name: LimServiceSiteName
-              value: {{ .Values.serviceWebSiteName | quote }}
-            - name: LimApiSiteName
-              value: {{ .Values.apiSiteName | quote }}
-            - name: LimDirectory
-              value: 'C:\lim'
-            - name: LimAdminUsername
-              value: {{ .Values.adminUsername | quote }}
-            - name: LimAdminPassword
+            - name: ASPNETCORE_URLS
+              value: "{{ if .Values.serverCertificate.enabled }}https://+:443{{ else }}http://+:80{{ end }}"
+            - name: DefaultAdministrator__Login
+              value: {{ .Values.defaultAdministrator.login | quote }}
+            - name: DefaultAdministrator__FullName
+              value: {{ .Values.defaultAdministrator.fullName | quote }}
+            - name: DefaultAdministrator__Password
               valueFrom:
                 secretKeyRef:
                   name: {{ include "lim-secret.fullname" . }}
                   key: lim-admin-password
-            - name: LimAdminEmail
-              value: {{ .Values.adminEmail | quote }}
-            - name: LimAdminFriendlyName
-              value: {{ .Values.adminFriendlyName | quote }}
+            - name: DefaultAdministrator__Email
+              value: {{ .Values.defaultAdministrator.email | quote }}
+            - name: JWT__ExpirationMinutes
+              value: "{{ .Values.jwt.expirationMinutes }}"
+            - name: JWT__RefreshTokenExpirationMinutes
+              value: "{{ .Values.jwt.refreshTokenExpirationMinutes }}"
+            - name: JWT__ValidAudience
+              value: {{ .Values.jwt.validAudience | quote }}
+            - name: JWT__ValidIssuer
+              value: {{ .Values.jwt.validIssuer | quote }}
+            - name: JWT__SecurityKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lim-secret.fullname" . }}
+                  key: lim-jwt-security-key
+            - name: AllowNonTrustedServerCertificate
+              value: {{ .Values.allowNonTrustedServerCertificate | quote }}
+            - name: FortifyLicensingUrl
+              value: {{ .Values.fortifyLicensingUrl | quote }}
+            - name: Proxy__Mode
+              value: "{{ .Values.proxy.mode }}"
+            - name: Proxy__Address
+              value: "{{ .Values.proxy.address }}"
+            - name: Proxy__Port
+              value: "{{ .Values.proxy.port }}"
+            - name: Proxy__UserName
+              value: "{{ .Values.proxy.userName }}"
+            {{- if .Values.proxy.password }}
+            - name: Proxy__Password
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lim-secret.fullname" . }}
+                  key: lim-proxy-password
+            {{- end }}
+            {{- if .Values.serverCertificate.enabled }}
+            - name: ASPNETCORE_Kestrel__Certificates__Default__Path
+              value: /server-certificate/server-certificate.pfx
+            - name: ASPNETCORE_Kestrel__Certificates__Default__Password
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lim-secret.fullname" . }}
+                  key: lim-server-certificate-password
+            {{- end }}
+            {{- if not .Values.signingCertificate.autoGenerate }}
+            - name: Signing__CertificatePath
+              value: /signing-certificate/signing-certificate.pfx
+            - name: Signing__CertificatePassword
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lim-secret.fullname" . }}
+                  key: lim-signing-certificate-password
+            {{- end }}
             {{- with .Values.additionalEnvironment }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
           volumeMounts:
-            - name: lim-data
-              mountPath: 'C:\lim'
+            - name: database
+              mountPath: "/app/database"
+            - name: logs
+              mountPath: "/app/logs"
+            - name: certificates
+              mountPath: "/app/certificates"
+            {{- if .Values.serverCertificate.enabled }}
+            - name: lim-server-certificate
+              mountPath: "/server-certificate/"
+            {{- end }}
+            {{- if .Values.serverCertificate.autoGenerate }}
+            - name: lim-signing-certificate
+              mountPath: "/signing-certificate/"
+            {{- end }}
           ports:
             - name: http
               containerPort: 80
               protocol: TCP
+            {{- if .Values.serverCertificate.enabled }}
+            - name: https
+              containerPort: 443
+              protocol: TCP
+            {{- end }}
           livenessProbe:
-            initialDelaySeconds: 120
-            failureThreshold: 6
             httpGet:
-              path: /{{ .Values.adminWebSiteName }}
-              port: http
+              path: /
+              port: {{ if .Values.serverCertificate.enabled }}https{{ else }}http{{ end }}
+              scheme: {{ if .Values.serverCertificate.enabled }}HTTPS{{ else }}HTTP{{ end }}
           readinessProbe:
             httpGet:
-              path: /{{ .Values.adminWebSiteName }}
-              port: http
+              path: /
+              port: {{ if .Values.serverCertificate.enabled }}https{{ else }}http{{ end }}
+              scheme: {{ if .Values.serverCertificate.enabled }}HTTPS{{ else }}HTTP{{ end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
-        - name: lim-data
-        {{- if .Values.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ .Values.persistence.existingClaim | default (include "lim.fullname" .) }}
-        {{- else }}
+        {{- if .Values.serverCertificate.enabled }}
+        - name: lim-server-certificate
+          secret:
+            secretName: {{ include "lim-secret.fullname" . }}
+            items:
+              - key: lim-server-certificate
+                path: server-certificate.pfx
+        {{- end }}
+        {{- if not .Values.signingCertificate.autoGenerate }}
+        - name: lim-signing-certificate
+          secret:
+            secretName: {{ include "lim-secret.fullname" . }}
+            items:
+              - key: lim-signing-certificate
+                path: signing-certificate.pfx
+        {{- end }}
+        {{- if and .Values.persistence.certificates.enabled .Values.persistence.certificates.existingClaim }}
+        - name: certificates
+          persistentVolumeClaim: {{ .Values.persistence.certificates.existingClaim }}
+        {{- else if not .Values.persistence.certificates.enabled }}
+        - name: certificates
+          emptyDir: {}
+        {{- end }}
+        {{- if and .Values.persistence.database.enabled .Values.persistence.database.existingClaim }}
+        - name: database
+          persistentVolumeClaim: {{ .Values.persistence.database.existingClaim }}
+        {{- else if not .Values.persistence.database.enabled }}
+        - name: database
+          emptyDir: {}
+        {{- end }}
+        {{- if and .Values.persistence.logs.enabled .Values.persistence.logs.existingClaim }}
+        - name: logs
+          persistentVolumeClaim: {{ .Values.persistence.logs.existingClaim }}
+        {{- else if not .Values.persistence.logs.enabled }}
+        - name: logs
           emptyDir: {}
         {{- end }}
       nodeSelector:
@@ -110,3 +184,69 @@ spec:
       {{- with .Values.tolerations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
+  {{- if or .Values.persistence.database.enabled .Values.persistence.certificates.enabled .Values.persistence.logs.enabled }}
+  volumeClaimTemplates:
+    {{- if and .Values.persistence.database.enabled (not .Values.persistence.database.existingClaim) }}
+    - metadata:
+        name: "database"
+        {{- if .Values.persistence.database.annotations }}
+        annotations:
+        {{- toYaml .Values.persistence.database.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+        {{- if not (empty .Values.persistence.database.accessModes) }}
+        {{- range .Values.persistence.database.accessModes }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- else }}
+        - {{ .Values.persistence.database.accessMode | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.database.size | quote }}
+        storageClassName: {{ .Values.persistence.database.storageClass }}
+  {{- end }}
+  {{- if and .Values.persistence.certificates.enabled (not .Values.persistence.certificates.existingClaim) }}
+    - metadata:
+        name: "certificates"
+        {{- if .Values.persistence.certificates.annotations }}
+        annotations:
+        {{- toYaml .Values.persistence.certificates.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+        {{- if not (empty .Values.persistence.certificates.accessModes) }}
+        {{- range .Values.persistence.certificates.accessModes }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- else }}
+        - {{ .Values.persistence.certificates.accessMode | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.certificates.size | quote }}
+        storageClassName: {{ .Values.persistence.certificates.storageClass }}
+  {{- end }}
+  {{- if and .Values.persistence.logs.enabled (not .Values.persistence.logs.existingClaim) }}
+    - metadata:
+        name: "logs"
+        {{- if .Values.persistence.logs.annotations }}
+        annotations:
+        {{- toYaml .Values.persistence.logs.annotations | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+        {{- if not (empty .Values.persistence.logs.accessModes) }}
+        {{- range .Values.persistence.logs.accessModes }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- else }}
+        - {{ .Values.persistence.logs.accessMode | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.logs.size | quote }}
+        storageClassName: {{ .Values.persistence.logs.storageClass }}
+  {{- end }}
+  {{- end }}
