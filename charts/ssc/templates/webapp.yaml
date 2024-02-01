@@ -21,7 +21,7 @@ spec:
     metadata:
       labels:
         {{- include "ssc.selector" $context | nindent 8 }}
-    {{- with .Values.annotations }}
+    {{- with .Values.webapp.annotations }}
       annotations:
         {{- toYaml . | nindent 8 -}}
     {{- end }}
@@ -75,7 +75,7 @@ spec:
               value: "/app/secrets/{{ required "The secretRef.keys.jvmTruststorePasswordEntry config value is required!" $jvmTruststorePasswordEntry | toString | trim }}"
             {{- end }}
           {{- end }}
-          {{- with .Values.environment }}
+          {{- with .Values.webapp.environment }}
             {{- toYaml . | nindent 12 -}}
           {{- end }}
           image: "{{ .Values.image.repositoryPrefix }}{{ .Values.image.webapp }}:{{ include "ssc.image.tag" $context }}"
@@ -89,13 +89,15 @@ spec:
             - name: etc-volume
               mountPath: "/app/etc"
           readinessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 10
             httpGet:
-              path: /images/favicon.ico
-              port: http-web
-              scheme: HTTP
+              path: "{{ $urlPathPrefix }}/images/favicon.ico"
+              port: https-web
+              scheme: HTTPS
               httpHeaders:
                 - name: Host
-                  value: localhost:8080
+                  value: {{ $urlAuthority }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
