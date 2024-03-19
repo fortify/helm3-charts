@@ -22,7 +22,8 @@ images:
     pullPolicy: "IfNotPresent"
   utilityservice:
     repository: fortifydocker/dast-scanner
-    tag: "23.2.ubi.8"
+    # tag: "23.2.ubi.8"
+    tag: "23.2.ubi.8.6"
     pullPolicy: "IfNotPresent"
   twofactorauth:
     repository: fortifydocker/fortify-2fa
