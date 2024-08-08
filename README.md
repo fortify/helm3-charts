@@ -7,11 +7,19 @@
 
 <!-- END-INCLUDE:p.marketing-intro.md -->
 
-
-
 <!-- START-INCLUDE:repo-intro.md -->
 
-Inside this repository, you'll find Fortify Helm charts. To learn how to add this repository to Helm, please refer to the instructions in [USAGE.md](USAGE.md). Additionally, for a practical deployment example, please see the details in [docs/minikube-deployment](docs/minikube-deployment).
+## Important! Update for 24.2.0 and beyond
+
+Starting with the 24.2.0 versions of helm charts, the charts are transitioning to Docker Hub, with this repository providing documentation for the charts.   The current status of the charts for 24.2:
+
+| Chart | 24.2.0 chart status | Notes |
+| ---| ---| ---|
+| SSC   |  Not yet released| 24.2.0 binaries compatible with existing chart |
+| SC-SAST | Not yet released | 24.2.0 binaries compatible with existing chart |
+| LIM | Released | [helm-lim Docker Hub](https://hub.docker.com/repository/docker/fortifydocker/helm-lim) |
+| SC-DAST | Released | [helm-scancentral-dast-core on Docker Hub](https://hub.docker.com/repository/docker/fortifydocker/helm-scancentral-dast-core)<br>[helm-scancentral-dast-scanner on Docker Hub](https://hub.docker.com/repository/docker/fortifydocker/helm-scancentral-dast-scanner)|
+
 
 <!-- END-INCLUDE:repo-intro.md -->
 
