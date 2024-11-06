@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "ssc.selector" $context | nindent 8 }}
+        {{- include "ssc.labels" $context | nindent 8 }}
     spec:
       containers:
         - name: webapp
