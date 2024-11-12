@@ -9,16 +9,16 @@
 
 <!-- START-INCLUDE:repo-intro.md -->
 
-## Important! Update for 24.2.0 and beyond
+## Important! Update for 24.2 and beyond
 
-Starting with the 24.2.0 versions of helm charts, the charts are transitioning to Docker Hub, with this repository providing documentation for the charts.   The current status of the charts for 24.2:
+Starting with the 24.2 versions of helm charts, the charts are transitioning to Docker Hub, with this repository providing documentation for the charts. Current status of the charts:
 
-| Chart | 24.2.0 chart status | Notes |
-| ---| ---| ---|
-| SSC   |  Not yet released| 24.2.0 binaries compatible with existing chart |
-| SC-SAST | Not yet released | 24.2.0 binaries compatible with existing chart |
-| LIM | Released | [helm-lim Docker Hub](https://hub.docker.com/repository/docker/fortifydocker/helm-lim) |
-| SC-DAST | Released | [helm-scancentral-dast-core on Docker Hub](https://hub.docker.com/repository/docker/fortifydocker/helm-scancentral-dast-core)<br>[helm-scancentral-dast-scanner on Docker Hub](https://hub.docker.com/repository/docker/fortifydocker/helm-scancentral-dast-scanner)|
+| Chart | 24.4 | 24.2 | Notes |
+| --- | --- | --- | --- |
+| SSC | Released | Compatible with 23.2 chart | [helm-ssc on Docker Hub](https://hub.docker.com/repository/docker/fortifydocker/helm-ssc) |
+| SC-SAST | Released | Compatible with 23.2 chart | [helm-scancentral-sast on Docker Hub](https://hub.docker.com/repository/docker/fortifydocker/helm-scancentral-sast) |
+| LIM | Released | Released | [helm-lim on Docker Hub](https://hub.docker.com/repository/docker/fortifydocker/helm-lim) |
+| SC-DAST | Released | Released | [helm-scancentral-dast-core on Docker Hub](https://hub.docker.com/repository/docker/fortifydocker/helm-scancentral-dast-core)<br>[helm-scancentral-dast-scanner on Docker Hub](https://hub.docker.com/repository/docker/fortifydocker/helm-scancentral-dast-scanner)|
 
 
 <!-- END-INCLUDE:repo-intro.md -->
