@@ -1,4 +1,3 @@
 # Contributing to Fortify Helm Charts
 
-Our helm chart sources have moved internally and this repository is in the state of being phased out as the older charts published in this repo age out of support.  For issues with helm charts 24.4.0 and above, please open appropriate support tickets.
-
+As stated in [README.md](README.md), the Helm charts that used to be hosted in this repository have been moved to Docker Hub. As such, Pull Requests on this repository are no longer being monitored.
